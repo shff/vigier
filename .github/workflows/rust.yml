@@ -1,0 +1,97 @@
+name: Rust
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Apt
+        run: sudo apt-get update && sudo apt-get install libc6-dev mesa-common-dev libgl1-mesa-dev libgl1
+      - name: Get Tarpaulin
+        run: curl -L https://github.com/xd009642/tarpaulin/releases/download/0.16.0/cargo-tarpaulin-0.16.0-travis.tar.gz | tar zxv -C /usr/share/rust/.cargo/bin
+      - name: Format
+        run: cargo fmt -- --check
+      - name: Lint
+        run: cargo clippy -- -D warnings -D clippy::all -D clippy::nursery
+
+  e2e:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { os: macos, target: x86_64-apple-darwin }
+          - { os: macos, target: x86_64-apple-ios }
+          - { os: macos, target: aarch64-apple-ios }
+          - { os: ubuntu, target: i686-unknown-linux-gnu }
+          - { os: ubuntu, target: x86_64-unknown-linux-gnu }
+          - { os: ubuntu, target: wasm32-unknown-emscripten }
+          - { os: ubuntu, target: i686-linux-android, abi: x86 }
+          - { os: ubuntu, target: x86_64-linux-android, abi: x86_64 }
+          - { os: ubuntu, target: armv7-linux-androideabi, abi: armeabi-v7a }
+          - { os: ubuntu, target: aarch64-linux-android, abi: arm64-v8a }
+          - { os: windows, target: x86_64-pc-windows-msvc }
+          - { os: windows, target: i686-pc-windows-msvc }
+    runs-on: ${{ matrix.platform.os }}-latest
+    env:
+      CFLAGS: -I/opt/android/ndk-bundle/sources/android/native_app_glue
+      CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER: aarch64-linux-android30-clang
+      CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER: armv7a-linux-androideabi30-clang
+      CARGO_TARGET_I686_LINUX_ANDROID_LINKER: i686-linux-android30-clang
+      CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER: x86_64-linux-android30-clang
+    steps:
+      - uses: actions/checkout@v2
+      - name: Rustup
+        run: rustup target add ${{ matrix.platform.target }}
+      - name: Apt
+        if: (contains(matrix.platform.target, 'linux-gnu'))
+        run: sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install libc6-dev libc6-dev-i386 mesa-common-dev libgl1-mesa-dev libgl1 mesa-common-dev:i386 libgl1-mesa-dev:i386 libgl1:i386
+      - name: Emscripten
+        if: (matrix.platform.target == 'wasm32-unknown-emscripten')
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git && \
+          cd emsdk && \
+          ./emsdk install 2.0.9 && \
+          ./emsdk activate 2.0.9 && \
+          echo "$(pwd)/upstream/emscripten" >> $GITHUB_PATH
+      - name: Get NDK
+        if: (contains(matrix.platform.target, 'linux-android'))
+        run: |
+          yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --sdk_root=/opt/android "build-tools;30.0.2" && \
+          yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --sdk_root=/opt/android "platforms;android-30" && \
+          yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --sdk_root=/opt/android tools && \
+          yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --sdk_root=/opt/android ndk-bundle && \
+          echo "/opt/android/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH &&
+          echo "/opt/android/build-tools/30.0.2" >> $GITHUB_PATH
+      - name: Build Library
+        run: cargo build --release --lib --target ${{ matrix.platform.target }}
+      - name: Build Binaries
+        if: (!contains(matrix.platform.target, 'linux-android') && !contains(matrix.platform.target, 'windows'))
+        run: cargo build --release --bin gen --target ${{ matrix.platform.target }}
+      - name: Build Android APK
+        if: contains(matrix.platform.target, 'android')
+        run: |
+          echo '''<?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.gen">
+            <uses-sdk android:minSdkVersion="21" />
+            <application android:hasCode="false" android:debuggable="true">
+              <activity android:name="android.app.NativeActivity" android:configChanges="keyboardHidden">
+                <meta-data android:name="android.app.lib_name" android:value="libgen" />
+              </activity>
+            </application>
+          </manifest>''' > ./AndroidManifest.xml && \
+          mkdir -p ./lib/${{ matrix.platform.abi }} && \
+          cp ./target/${{ matrix.platform.target }}/release/deps/libgen.so ./lib/${{ matrix.platform.abi }} && \
+          aapt package -M ./AndroidManifest.xml -I /opt/android/platforms/android-30/android.jar -F ./target/${{ matrix.platform.target }}/release/gen.apk && \
+          aapt add ./target/${{ matrix.platform.target }}/release/gen.apk ./lib/${{ matrix.platform.abi }}/libgen.so
+      - uses: actions/upload-artifact@v2
+        with:
+          name: gen-${{ matrix.platform.target }}
+          path: |
+            target/${{ matrix.platform.target }}/release/gen
+            target/${{ matrix.platform.target }}/release/gen.exe
+            target/${{ matrix.platform.target }}/release/gen.wasm
+            target/${{ matrix.platform.target }}/release/libgen.rlib
+            target/${{ matrix.platform.target }}/release/gen.apk
