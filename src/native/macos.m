@@ -3,6 +3,25 @@
 @import Metal;
 @import AVFoundation;
 
+NSString *shader =
+    @"#include <metal_stdlib>\n"
+     "using namespace metal;"
+     "vertex float4 v_simple("
+     "    uint idx [[vertex_id]])"
+     "{"
+     "    float2 pos[] = { {-1, -1}, {-1, 1}, {1, -1}, {1, -1}, "
+     "{-1, 1}, {1, 1} };"
+     "    return float4(pos[idx].xy, 0, 1);"
+     "}"
+     "fragment half4 f_simple("
+     "    float4 in [[stage_in]],"
+     "    texture2d<half> albedo [[ texture(0) ]]"
+     ")"
+     "{"
+     "    constexpr sampler Sampler(coord::pixel,filter::nearest);"
+     "    return half4(albedo.sample(Sampler, 0, 0).xyz, 1);"
+     "}";
+
 @interface App : NSResponder <NSApplicationDelegate>
 @property(nonatomic, assign) NSView *view;
 @property(nonatomic, assign) id<MTLDevice> device;
@@ -10,6 +29,9 @@
 @property(nonatomic, assign) CAMetalLayer *layer;
 @property(nonatomic, assign) MTLRenderPassDescriptor *pass1;
 @property(nonatomic, assign) MTLRenderPassDescriptor *pass2;
+@property(nonatomic, assign) id<MTLTexture> depthTexture;
+@property(nonatomic, assign) id<MTLTexture> albedoTexture;
+@property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
 @property(nonatomic, assign) AVAudioEngine *audioEngine;
 @property(nonatomic, assign) AVAudioMixerNode *audioMixer;
 @property(nonatomic, assign) double timerCurrent;
@@ -38,7 +60,7 @@
     _view = [[NSView alloc] init];
     [_view setLayer:_layer];
 
-    // G-Buffer pass
+    // Geometry Pass
     _pass1 = [[MTLRenderPassDescriptor alloc] init];
     _pass1.colorAttachments[0].loadAction = MTLLoadActionClear;
     _pass1.colorAttachments[0].storeAction = MTLStoreActionStore;
@@ -47,11 +69,20 @@
     _pass1.depthAttachment.loadAction = MTLLoadActionClear;
     _pass1.depthAttachment.storeAction = MTLStoreActionStore;
 
-    // Lighting pass
+    // Final Pass
     _pass2 = [[MTLRenderPassDescriptor alloc] init];
+    _pass2.colorAttachments[0].loadAction = MTLLoadActionLoad;
     _pass2.colorAttachments[0].storeAction = MTLStoreActionStore;
-    _pass2.colorAttachments[0].clearColor = MTLClearColorMake(1, 0.5, 0, 1);
     _pass2.depthAttachment.loadAction = MTLLoadActionLoad;
+
+    // Final State
+    id library = [_device newLibraryWithSource:shader options:nil error:NULL];
+    MTLRenderPipelineDescriptor *desc = [MTLRenderPipelineDescriptor new];
+    desc.vertexFunction = [library newFunctionWithName:@"v_simple"];
+    desc.fragmentFunction = [library newFunctionWithName:@"f_simple"];
+    desc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
+    _quadState = [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
 
     // Create the Window
     NSWindow *window =
@@ -117,13 +148,19 @@
     // Renderer
     id<CAMetalDrawable> drawable = [_layer nextDrawable];
     _pass2.colorAttachments[0].texture = drawable.texture;
-
     id buffer = [_queue commandBuffer];
+
+    // Geometry Pass
     id encoder1 = [buffer renderCommandEncoderWithDescriptor:_pass1];
     [encoder1 setViewport:viewport];
     [encoder1 endEncoding];
+
+    // Final Pass
     id encoder2 = [buffer renderCommandEncoderWithDescriptor:_pass2];
     [encoder2 setViewport:viewport];
+    [encoder2 setRenderPipelineState:_quadState];
+    [encoder2 setFragmentTexture:_albedoTexture atIndex:0];
+    [encoder2 drawPrimitives:3 vertexStart:0 vertexCount:6];
     [encoder2 endEncoding];
     [buffer presentDrawable:drawable];
     [buffer commit];
@@ -142,14 +179,14 @@
 
   // Depth/Stencil Texture
   desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
-  id depthTexture = [_device newTextureWithDescriptor:desc];
-  _pass1.depthAttachment.texture = depthTexture;
-  _pass2.depthAttachment.texture = depthTexture;
+  _depthTexture = [_device newTextureWithDescriptor:desc];
+  _pass1.depthAttachment.texture = _depthTexture;
+  _pass2.depthAttachment.texture = _depthTexture;
 
   // Albedo Texture
   desc.pixelFormat = MTLPixelFormatRGBA8Unorm_sRGB;
-  id albedoTexture = [_device newTextureWithDescriptor:desc];
-  _pass1.colorAttachments[0].texture = albedoTexture;
+  _albedoTexture = [_device newTextureWithDescriptor:desc];
+  _pass1.colorAttachments[0].texture = _albedoTexture;
 }
 
 - (void)mouseMoved:(NSEvent *)event
