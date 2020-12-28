@@ -23,7 +23,7 @@ NSString *shader =
      "}";
 
 @interface App : NSResponder <NSApplicationDelegate>
-@property(nonatomic, assign) NSView *view;
+@property(nonatomic, assign) NSWindow *window;
 @property(nonatomic, assign) id<MTLDevice> device;
 @property(nonatomic, assign) id<MTLCommandQueue> queue;
 @property(nonatomic, assign) CAMetalLayer *layer;
@@ -48,10 +48,6 @@ NSString *shader =
     _queue = [_device newCommandQueue];
     _layer = [CAMetalLayer layer];
     [_layer setDevice:_device];
-
-    // Create the View
-    _view = [[NSView alloc] init];
-    [_view setLayer:_layer];
 
     // Geometry Pass
     _pass1 = [[MTLRenderPassDescriptor alloc] init];
@@ -78,7 +74,7 @@ NSString *shader =
     _quadState = [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
 
     // Create the Window
-    NSWindow *window =
+    _window =
         [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 640, 480)
                                     styleMask:NSWindowStyleMaskTitled |
                                               NSWindowStyleMaskResizable |
@@ -86,13 +82,13 @@ NSString *shader =
                                               NSWindowStyleMaskMiniaturizable
                                       backing:NSBackingStoreBuffered
                                         defer:NO];
-    [window cascadeTopLeftFromPoint:NSMakePoint(20, 20)];
-    [window setMinSize:NSMakeSize(300, 200)];
-    [window setAcceptsMouseMovedEvents:YES];
-    [window makeKeyAndOrderFront:nil];
-    [window setContentView:_view];
-    [window setNextResponder:self];
-    [window center];
+    [_window cascadeTopLeftFromPoint:NSMakePoint(20, 20)];
+    [_window setMinSize:NSMakeSize(300, 200)];
+    [_window setAcceptsMouseMovedEvents:YES];
+    [_window.contentView setLayer:_layer];
+    [_window makeKeyAndOrderFront:nil];
+    [_window setNextResponder:self];
+    [_window center];
 
     // Re-create buffers when resizing windows
     [self createBuffers];
@@ -103,8 +99,8 @@ NSString *shader =
              object:nil];
 
     // Disable tabbing
-    if ([window respondsToSelector:@selector(setTabbingMode:)])
-      [window setTabbingMode:NSWindowTabbingModeDisallowed];
+    if ([_window respondsToSelector:@selector(setTabbingMode:)])
+      [_window setTabbingMode:NSWindowTabbingModeDisallowed];
 
     // Initialize timer
     _timerCurrent = CACurrentMediaTime();
@@ -125,7 +121,7 @@ NSString *shader =
 {
   @autoreleasepool
   {
-    CGSize size = [_view frame].size;
+    CGSize size = [_window.contentView frame].size;
     MTLViewport viewport = {0, 0, size.width, size.height, 0, 1};
 
     // Update Timer
@@ -162,7 +158,7 @@ NSString *shader =
 
 - (void)createBuffers
 {
-  CGSize size = [_view frame].size;
+  CGSize size = [_window.contentView frame].size;
 
   MTLTextureDescriptor *desc = [[MTLTextureDescriptor alloc] init];
   desc.storageMode = MTLStorageModePrivate;
