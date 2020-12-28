@@ -1,7 +1,7 @@
 @import Cocoa;
 @import IOKit.pwr_mgt;
 @import Metal;
-@import AVFoundation;
+@import QuartzCore;
 
 NSString *shader =
     @"#include <metal_stdlib>\n"
@@ -32,8 +32,6 @@ NSString *shader =
 @property(nonatomic, assign) id<MTLTexture> depthTexture;
 @property(nonatomic, assign) id<MTLTexture> albedoTexture;
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
-@property(nonatomic, assign) AVAudioEngine *audioEngine;
-@property(nonatomic, assign) AVAudioMixerNode *audioMixer;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
 @property(nonatomic, assign) NSPoint mouse;
@@ -45,11 +43,6 @@ NSString *shader =
   (void)notification;
   @autoreleasepool
   {
-    // Initialize Audio
-    _audioEngine = [[AVAudioEngine alloc] init];
-    _audioMixer = [_audioEngine mainMixerNode];
-    [_audioEngine startAndReturnError:nil];
-
     // Create the Metal device
     _device = [MTLCreateSystemDefaultDevice() autorelease];
     _queue = [_device newCommandQueue];

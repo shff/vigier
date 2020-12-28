@@ -1,13 +1,11 @@
 @import UIKit;
 @import Foundation;
 @import Metal;
-@import AVFoundation;
+@import QuartzCore;
 
 @interface App : UIResponder <UIApplicationDelegate>
 @property(nonatomic, assign) id<MTLCommandQueue> queue;
 @property(nonatomic, assign) CAMetalLayer *layer;
-@property(nonatomic, assign) AVAudioEngine *audioEngine;
-@property(nonatomic, assign) AVAudioMixerNode *audioMixer;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
 @end
@@ -16,11 +14,6 @@
 - (void)applicationDidFinishLaunching:(UIApplication *)application
 {
   CGRect bounds = [[UIScreen mainScreen] bounds];
-
-  // Initialize Audio
-  _audioEngine = [[AVAudioEngine alloc] init];
-  _audioMixer = [_audioEngine mainMixerNode];
-  // [_audioEngine startAndReturnError:nil];
 
   // Initialize Metal
   id device = [MTLCreateSystemDefaultDevice() autorelease];
