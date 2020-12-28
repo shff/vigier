@@ -121,9 +121,6 @@ NSString *shader =
 {
   @autoreleasepool
   {
-    CGSize size = [_window.contentView frame].size;
-    MTLViewport viewport = {0, 0, size.width, size.height, 0, 1};
-
     // Update Timer
     double timerNext = CACurrentMediaTime();
     double timerDelta = timerNext - _timerCurrent;
@@ -141,12 +138,10 @@ NSString *shader =
 
     // Geometry Pass
     id encoder1 = [buffer renderCommandEncoderWithDescriptor:_pass1];
-    [encoder1 setViewport:viewport];
     [encoder1 endEncoding];
 
     // Final Pass
     id encoder2 = [buffer renderCommandEncoderWithDescriptor:_pass2];
-    [encoder2 setViewport:viewport];
     [encoder2 setRenderPipelineState:_quadState];
     [encoder2 setFragmentTexture:_albedoTexture atIndex:0];
     [encoder2 drawPrimitives:3 vertexStart:0 vertexCount:6];
