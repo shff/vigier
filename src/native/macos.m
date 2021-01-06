@@ -10,8 +10,7 @@ NSString *shader =
      "vertex float4 v_simple("
      "    uint idx [[vertex_id]])"
      "{"
-     "    float2 pos[] = { {-1, -1}, {-1, 1}, {1, -1}, {1, -1}, "
-     "{-1, 1}, {1, 1} };"
+     "    float2 pos[] = { {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };"
      "    return float4(pos[idx].xy, 0, 1);"
      "}"
      "fragment half4 f_simple("
@@ -193,7 +192,7 @@ static OSStatus audioCallback(void *inRefCon,
     id encoder2 = [buffer renderCommandEncoderWithDescriptor:_pass2];
     [encoder2 setRenderPipelineState:_quadState];
     [encoder2 setFragmentTexture:_albedoTexture atIndex:0];
-    [encoder2 drawPrimitives:3 vertexStart:0 vertexCount:6];
+    [encoder2 drawPrimitives:4 vertexStart:0 vertexCount:4];
     [encoder2 endEncoding];
     [buffer presentDrawable:drawable];
     [buffer commit];
