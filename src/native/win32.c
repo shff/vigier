@@ -2,6 +2,12 @@
 #include <d3d11.h>
 #include <windows.h>
 
+#include <mmreg.h>
+#include <mmsystem.h>
+#include <dsound.h>
+#include <emmintrin.h>
+#include <xmmintrin.h>
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   switch (uMsg)
@@ -23,6 +29,36 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                CW_USEDEFAULT, NULL, NULL, instance, NULL);
   ShowWindow(window, SW_SHOWNORMAL);
+
+  // Create DirectSound Device
+  LPDIRECTSOUND dsound;
+  DirectSoundCreate(0, &dsound, 0);
+  dsound->lpVtbl->SetCooperativeLevel(dsound, window, DSSCL_PRIORITY);
+
+  // Create Primary Buffer
+  DSBUFFERDESC bufferDesc1 = {.dwSize = sizeof(DSBUFFERDESC),
+                              .dwFlags = DSBCAPS_PRIMARYBUFFER};
+  LPDIRECTSOUNDBUFFER primaryBuffer;
+  dsound->lpVtbl->CreateSoundBuffer(dsound, &bufferDesc1, &primaryBuffer, 0);
+  WAVEFORMATEX format = {
+      .wFormatTag = WAVE_FORMAT_PCM,
+      .nChannels = 2,
+      .nSamplesPerSec = 44100,
+      .wBitsPerSample = 16,
+      .nBlockAlign = 2 * 16 / 8,
+      .nAvgBytesPerSec = 44100 * 2 * 16 / 8,
+      .cbSize = 0,
+  };
+  primaryBuffer->lpVtbl->SetFormat(primaryBuffer, &format);
+
+  // Create Secondary Buffer
+  DSBUFFERDESC bufferDesc2 = {
+      .dwSize = sizeof(DSBUFFERDESC),
+      .dwBufferBytes = 1024,
+      .lpwfxFormat = &format,
+  };
+  LPDIRECTSOUNDBUFFER secondary_buffer;
+  dsound->lpVtbl->CreateSoundBuffer(dsound, &bufferDesc2, &secondary_buffer, 0);
 
   // Create Swap-Chain
   DXGI_SWAP_CHAIN_DESC desc = {
