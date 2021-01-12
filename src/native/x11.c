@@ -1,8 +1,7 @@
+#include <GL/glew.h>
 #include <GL/glx.h>
 #include <X11/Xlib.h>
 #include <alsa/asoundlib.h>
-#include <stdio.h>
-#include <time.h>
 
 int main()
 {
@@ -57,6 +56,37 @@ int main()
   XVisualInfo *vi = glXChooseVisual(display, 0, att);
   GLXContext context = glXCreateContext(display, vi, 0, 1);
   glXMakeCurrent(display, window, context);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+  // Create G-Buffer
+  unsigned int backbuffer;
+  glGenTextures(1, &backbuffer);
+  glBindTexture(GL_TEXTURE_2D, backbuffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+  // Create Z-Buffer
+  unsigned int depthbuffer;
+  glGenTextures(1, &depthbuffer);
+  glBindTexture(GL_TEXTURE_2D, depthbuffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 800, 600, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+  // Create Framebuffer
+  unsigned int gbuffer;
+  glGenFramebuffers(1, &gbuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, backbuffer, 0);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthbuffer, 0);
+  glDrawBuffers(2, (GLenum[]) { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT });
 
   // Start the Timer
   struct timespec time;
@@ -95,9 +125,11 @@ int main()
     {
     }
 
-    // Render
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    // Render to G-Buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glXSwapBuffers(display, window);
   }
 

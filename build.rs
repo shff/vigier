@@ -30,6 +30,7 @@ fn main() {
         println!("cargo:rustc-link-lib=X11");
         println!("cargo:rustc-link-lib=EGL");
         println!("cargo:rustc-link-lib=GL");
+        println!("cargo:rustc-link-lib=GLEW");
         println!("cargo:rustc-link-lib=asound");
     } else if target.contains("x86_64-apple-ios") {
         cc::Build::new()
