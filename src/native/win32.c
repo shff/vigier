@@ -121,6 +121,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   dev->lpVtbl->CreateRenderTargetView(dev, (ID3D11Resource *)bufferTex, NULL,
                                       &buffer);
 
+  // Set Render Target and Viewport
+  D3D11_VIEWPORT viewport = {0, 0, 800, 600, 1, 1000};
+  context->lpVtbl->RSSetViewports(context, 1, &viewport);
+  context->lpVtbl->OMSetRenderTargets(context, 1, &buffer, NULL);
+
   // Start the Timer
   long long timerResolution;
   long long timerCurrent;
