@@ -5,8 +5,6 @@
 #include <mmreg.h>
 #include <mmsystem.h>
 #include <dsound.h>
-#include <emmintrin.h>
-#include <xmmintrin.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
