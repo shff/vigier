@@ -1,5 +1,6 @@
 #include <GL/glx.h>
 #include <X11/Xlib.h>
+#include <alsa/asoundlib.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -20,9 +21,36 @@ int main()
                ExposureMask | KeyPressMask | ButtonPressMask |
                    ButtonReleaseMask);
   XMapWindow(display, window);
-
   Atom deleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", True);
   XSetWMProtocols(display, window, &deleteWindow, 1);
+
+  // Initialize ALSA
+  snd_pcm_t *pcm_handle;
+  snd_pcm_open(&pcm_handle, "hw:0,0", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
+  long unsigned int period_size = 1024;
+  unsigned int freq = 44100;
+  unsigned int periods = 2;
+
+  // Set ALSA Hardware Parameters
+  int dir = 0;
+  snd_pcm_hw_params_t *hw_params = NULL;
+  snd_pcm_hw_params_any(pcm_handle, hw_params);
+  snd_pcm_hw_params_set_access(pcm_handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED);
+  snd_pcm_hw_params_set_format(pcm_handle, hw_params, SND_PCM_FORMAT_S16_LE);
+  snd_pcm_hw_params_set_rate_near(pcm_handle, hw_params, &freq, &dir);
+  snd_pcm_hw_params_set_channels(pcm_handle, hw_params, 2);
+  snd_pcm_hw_params_set_period_size_near(pcm_handle, hw_params, &period_size, &dir);
+  snd_pcm_hw_params_set_periods_min(pcm_handle, hw_params, &periods, &dir);
+  snd_pcm_hw_params_set_periods_first(pcm_handle, hw_params, &periods, &dir);
+  snd_pcm_hw_params(pcm_handle, hw_params);
+
+  // Set ALSA Software Parameters
+  snd_pcm_sw_params_t *sw_params = NULL;
+  snd_pcm_sw_params_alloca(&sw_params);
+  snd_pcm_sw_params_current(pcm_handle, sw_params);
+  snd_pcm_sw_params_set_avail_min(pcm_handle, sw_params, period_size);
+  snd_pcm_sw_params_set_start_threshold(pcm_handle, sw_params, 1);
+  snd_pcm_sw_params(pcm_handle, sw_params);
 
   // Initialize OpenGL
   int att[] = {GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None};
@@ -41,7 +69,7 @@ int main()
   {
     XEvent e;
     XNextEvent(display, &e);
-    if (e.type == ClientMessage && e.xclient.data.l[0] == deleteWindow)
+    if (e.type == ClientMessage && e.xclient.data.l[0] == (long int)deleteWindow)
       break;
 
     // Mouse Cursor

@@ -24,11 +24,13 @@ fn main() {
             .flag("-Wall")
             .flag("-Wl,-s")
             .flag("-Wno-unused-parameter")
+            .flag("-Wno-unused-but-set-variable")
             .file("src/native/x11.c")
             .compile("native.a");
         println!("cargo:rustc-link-lib=X11");
         println!("cargo:rustc-link-lib=EGL");
         println!("cargo:rustc-link-lib=GL");
+        println!("cargo:rustc-link-lib=asound");
     } else if target.contains("x86_64-apple-ios") {
         cc::Build::new()
             .flag("-fmodules")
