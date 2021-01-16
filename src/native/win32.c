@@ -1,9 +1,5 @@
-#define WIN32_LEAN_AND_MEAN
-#include <d3d11.h>
 #include <windows.h>
-
-#include <mmreg.h>
-#include <mmsystem.h>
+#include <d3d11.h>
 #include <dsound.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
