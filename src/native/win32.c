@@ -111,7 +111,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   ID3D11Texture2D *zBufferTex = NULL;
   ID3D11RenderTargetView *zBuffer = NULL;
   dev->lpVtbl->CreateTexture2D(dev, &zBufferTexDesc, NULL, &zBufferTex);
-  dev->lpVtbl->CreateRenderTargetView(dev, (ID3D11Resource *)zBufferTex,
+  dev->lpVtbl->CreateDepthStencilView(dev, (ID3D11Resource *)zBufferTex,
                                       &zBufferDesc, &zBuffer);
 
   // Create the Backbuffer
@@ -120,11 +120,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   swapchain->lpVtbl->GetBuffer(swapchain, 0, &IID_ID3D11Texture2D, &bufferTex);
   dev->lpVtbl->CreateRenderTargetView(dev, (ID3D11Resource *)bufferTex, NULL,
                                       &buffer);
-
-  // Set Render Target and Viewport
-  D3D11_VIEWPORT viewport = {0, 0, 800, 600, 1, 1000};
-  context->lpVtbl->RSSetViewports(context, 1, &viewport);
-  context->lpVtbl->OMSetRenderTargets(context, 1, &buffer, NULL);
 
   // Start the Timer
   long long timerResolution;
@@ -169,7 +164,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     {
     }
 
-    D3D11_VIEWPORT viewport = {0, 0, 800, 600, 1, 1000};
+    // Set Viewport and Blank Colors
+    RECT rect;
+    GetWindowRect(window, &rect);
+    D3D11_VIEWPORT viewport = {0, 0, rect.right, rect.bottom, 1, 1000};
     float blankColor[4] = {0.0f, 0.2f, 0.4f, 1.0f};
 
     // Geometry Pass
