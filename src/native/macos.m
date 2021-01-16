@@ -54,7 +54,12 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
-@property(nonatomic, assign) NSPoint mouse;
+@property(nonatomic, assign) NSPoint mousePos;
+@property(nonatomic, assign) NSPoint mouseClick;
+@property(nonatomic, assign) float dragDeltaX;
+@property(nonatomic, assign) float dragDeltaY;
+@property(nonatomic, assign) float moveDeltaX;
+@property(nonatomic, assign) float moveDeltaY;
 @end
 
 @implementation App
@@ -154,6 +159,13 @@ static OSStatus audioCallback(void *inRefCon,
     _timerCurrent = CACurrentMediaTime();
     _lag = 0.0;
 
+    // Reset Deltas
+    _mouseClick = NSMakePoint(0.0f, 0.0f);
+    _moveDeltaX = 0.0f;
+    _moveDeltaY = 0.0f;
+    _dragDeltaX = 0.0f;
+    _dragDeltaY = 0.0f;
+
     // Initialize loop
     [NSTimer scheduledTimerWithTimeInterval:1.0 / 60.0
                                      target:self
@@ -178,6 +190,13 @@ static OSStatus audioCallback(void *inRefCon,
     for (_lag += timerDelta; _lag >= 1.0 / 60.0; _lag -= 1.0 / 60.0)
     {
     }
+
+    // Reset Deltas
+    _mouseClick = NSMakePoint(0.0f, 0.0f);
+    _moveDeltaX = 0.0f;
+    _moveDeltaY = 0.0f;
+    _dragDeltaX = 0.0f;
+    _dragDeltaY = 0.0f;
 
     // Renderer
     id<CAMetalDrawable> drawable = [_layer nextDrawable];
@@ -223,19 +242,24 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)mouseMoved:(NSEvent *)event
 {
-  _mouse = [event locationInWindow];
+  _mousePos = [event locationInWindow];
+  _moveDeltaX += [event deltaX];
+  _moveDeltaY += [event deltaY];
 }
 
 - (void)mouseUp:(NSEvent *)event
 {
   if ([event clickCount])
   {
+    _mouseClick = [event locationInWindow];
   }
 }
 
 - (void)mouseDragged:(NSEvent *)event
 {
-  _mouse = [event locationInWindow];
+  _mousePos = [event locationInWindow];
+  _dragDeltaX += [event deltaX];
+  _dragDeltaY += [event deltaY];
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
