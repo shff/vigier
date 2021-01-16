@@ -1,10 +1,13 @@
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
+#include <SLES/OpenSLES_Android.h>
 #include <android_native_app_glue.h>
 #include <stdint.h>
 
 EGLDisplay display;
 EGLSurface surface;
+SLEngineItf audioInterface;
+SLObjectItf audioOutput;
 unsigned int gbuffer;
 int32_t prevId;
 float prevX, prevY, touchX, touchY, moveX, moveY;
@@ -74,6 +77,15 @@ static void engine_handle_cmd(struct android_app *app, int32_t cmd)
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.9, 0.9, 0.9, 1);
+
+    // Initialize Audio
+    SLObjectItf engine;
+    const SLboolean req[1] = {0};
+    slCreateEngine(&engine, 0, 0, 0, 0, 0);
+    (*engine)->Realize(engine, 0);
+    (*engine)->GetInterface(engine, SL_IID_ENGINE, &audioInterface);
+    (*audioInterface)->CreateOutputMix(audioInterface, &audioOutput, 1, 0, req);
+    (*audioOutput)->Realize(audioOutput, 0);
   }
 }
 
