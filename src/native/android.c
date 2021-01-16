@@ -1,10 +1,13 @@
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
 #include <android_native_app_glue.h>
+#include <stdint.h>
 
 EGLDisplay display;
 EGLSurface surface;
 unsigned int gbuffer;
+int32_t prevId;
+float prevX, prevY, touchX, touchY, moveX, moveY;
 
 static void engine_handle_cmd(struct android_app *app, int32_t cmd)
 {
@@ -74,9 +77,37 @@ static void engine_handle_cmd(struct android_app *app, int32_t cmd)
   }
 }
 
-static int32_t engine_handle_input(struct android_app *app, AInputEvent *event)
+static int32_t engine_handle_input(struct android_app *app, AInputEvent *e)
 {
-  return 1;
+  if (AInputEvent_getType(e) != AINPUT_EVENT_TYPE_MOTION)
+    return 0;
+
+  int32_t action = AMotionEvent_getAction(e) & AMOTION_EVENT_ACTION_MASK;
+  float deltaX = AMotionEvent_getX(e, 0) - prevX;
+  float deltaY = AMotionEvent_getY(e, 0) - prevY;
+  int32_t isOne = AMotionEvent_getPointerCount(e) == 1;
+  int32_t isMove = deltaX * deltaX + deltaY * deltaY > 8 * 8;
+  int32_t isSame = prevId == AMotionEvent_getPointerId(e, 0);
+  int64_t isTap =
+      AMotionEvent_getEventTime(e) - AMotionEvent_getDownTime(e) <= 1.8E8;
+
+  if (action == AMOTION_EVENT_ACTION_MOVE && !isTap && isSame && isMove &&
+      isOne)
+  {
+    moveX = deltaX;
+    moveY = deltaY;
+  }
+  if (action == AMOTION_EVENT_ACTION_UP && isTap && isSame && !isMove && isOne)
+  {
+    touchX = deltaX;
+    touchY = deltaY;
+  }
+  if (action == AMOTION_EVENT_ACTION_DOWN)
+  {
+    prevId = AMotionEvent_getPointerId(e, 0);
+    prevX = AMotionEvent_getX(e, 0);
+    prevY = AMotionEvent_getY(e, 0);
+  }
 }
 
 void android_main(struct android_app *app)
