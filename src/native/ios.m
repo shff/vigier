@@ -33,6 +33,9 @@ NSString *shader =
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
+@property(nonatomic, assign) CGPoint mouseClick;
+@property(nonatomic, assign) float dragDeltaX;
+@property(nonatomic, assign) float dragDeltaY;
 @end
 
 @implementation App
@@ -78,6 +81,21 @@ NSString *shader =
   _timerCurrent = CACurrentMediaTime();
   _lag = 0.0;
 
+  // Reset Deltas
+  _mouseClick = CGPointMake(0.0f, 0.0f);
+  _dragDeltaX = 0.0f;
+  _dragDeltaY = 0.0f;
+
+  // Add gesture recognizers
+  [_mainWindow.rootViewController.view
+      addGestureRecognizer:[[UITapGestureRecognizer alloc]
+                               initWithTarget:self
+                                       action:@selector(onTap)]];
+  [_mainWindow.rootViewController.view
+      addGestureRecognizer:[[UIPanGestureRecognizer alloc]
+                               initWithTarget:self
+                                       action:@selector(onDrag)]];
+
   // Re-create buffers when rotating the device
   [self createBuffers];
   [[NSNotificationCenter defaultCenter]
@@ -106,6 +124,11 @@ NSString *shader =
     {
     }
 
+    // Reset Deltas
+    _mouseClick = CGPointMake(0.0f, 0.0f);
+    _dragDeltaX = 0.0f;
+    _dragDeltaY = 0.0f;
+
     // Renderer
     id<CAMetalDrawable> drawable = [_layer nextDrawable];
     _pass2.colorAttachments[0].texture = drawable.texture;
@@ -123,6 +146,23 @@ NSString *shader =
     [encoder2 endEncoding];
     [buffer presentDrawable:drawable];
     [buffer commit];
+  }
+}
+
+- (void)onTap:(UITapGestureRecognizer *)recognizer
+{
+  if (recognizer.state == UIGestureRecognizerStateRecognized)
+  {
+    _mouseClick = [recognizer locationInView:recognizer.view];
+  }
+}
+
+- (void)onDrag:(UITapGestureRecognizer *)recognizer
+{
+  if (recognizer.state == UIGestureRecognizerStateRecognized)
+  {
+    _dragDeltaX += [recognizer translationInView:recognizer.view].y;
+    _dragDeltaY += [recognizer translationInView:recognizer.view].y;
   }
 }
 

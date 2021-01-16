@@ -1,6 +1,6 @@
-#include <windows.h>
 #include <d3d11.h>
 #include <dsound.h>
+#include <windows.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
