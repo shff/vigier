@@ -54,12 +54,9 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
-@property(nonatomic, assign) NSPoint mousePos;
-@property(nonatomic, assign) NSPoint mouseClick;
-@property(nonatomic, assign) float dragDeltaX;
-@property(nonatomic, assign) float dragDeltaY;
-@property(nonatomic, assign) float moveDeltaX;
-@property(nonatomic, assign) float moveDeltaY;
+@property(nonatomic, assign) NSPoint mousePos, mouseClick;
+@property(nonatomic, assign) float dragDeltaX, dragDeltaY;
+@property(nonatomic, assign) float moveDeltaX, moveDeltaY;
 @end
 
 @implementation App
