@@ -42,7 +42,7 @@ static OSStatus audioCallback(void *inRefCon,
   return 0;
 }
 
-@interface App : NSResponder <NSApplicationDelegate>
+@interface App : NSResponder <NSApplicationDelegate, NSWindowDelegate>
 @property(nonatomic, assign) NSWindow *window;
 @property(nonatomic, assign) id<MTLDevice> device;
 @property(nonatomic, assign) id<MTLCommandQueue> queue;
@@ -138,6 +138,7 @@ static OSStatus audioCallback(void *inRefCon,
     [_window.contentView setLayer:_layer];
     [_window makeKeyAndOrderFront:nil];
     [_window setNextResponder:self];
+    [_window setDelegate:self];
     [_window center];
 
     // Re-create buffers when resizing windows
@@ -259,10 +260,9 @@ static OSStatus audioCallback(void *inRefCon,
   _dragDeltaY += [event deltaY];
 }
 
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
+- (void)windowWillClose:(NSWindow *)sender
 {
-  (void)sender;
-  return YES;
+  [NSApp terminate:nil];
 }
 @end
 
