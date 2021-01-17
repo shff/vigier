@@ -4,22 +4,26 @@
 #include <webgpu/webgpu.h>
 
 double timerCurrent = 0, lag = 0, w = 0, h = 0;
-float scale = 1.0f, mouseX = 0.0f, mouseY = 0.0f;
-int mouseL = 0, mouseR = 0;
+float scale, mouseClickX, mouseClickY, mouseDownX, mouseDownY, dragDeltaX = 0.0f,
+    dragDeltaY = 0.0f;
 
 int mouseCallback(int type, const EmscriptenMouseEvent *event, void *data)
 {
-  mouseX = event->targetX * scale;
-  mouseY = event->targetY * scale;
-
   if (event->button == 0 && type == EMSCRIPTEN_EVENT_MOUSEDOWN)
-    mouseL = 1;
+  {
+    mouseDownX = event->targetX * scale;
+    mouseDownY = event->targetY * scale;
+  }
   if (event->button == 0 && type == EMSCRIPTEN_EVENT_MOUSEUP)
-    mouseL = 0;
-  if (event->button == 2 && type == EMSCRIPTEN_EVENT_MOUSEDOWN)
-    mouseR = 1;
-  if (event->button == 2 && type == EMSCRIPTEN_EVENT_MOUSEUP)
-    mouseR = 0;
+  {
+    mouseClickX = event->targetX * scale;
+    mouseClickY = event->targetY * scale;
+  }
+  if (event->buttons == 1 && type == EMSCRIPTEN_EVENT_MOUSEMOVE)
+  {
+    dragDeltaX = (mouseDownX = event->targetX * scale) - mouseDownX;
+    dragDeltaY = (mouseDownY = event->targetY * scale) - mouseDownY;
+  }
 
   return 1;
 }

@@ -25,7 +25,8 @@ int main()
 
   // Initialize ALSA
   snd_pcm_t *pcm_handle;
-  snd_pcm_open(&pcm_handle, "hw:0,0", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
+  snd_pcm_open(&pcm_handle, "hw:0,0", SND_PCM_STREAM_PLAYBACK,
+               SND_PCM_NONBLOCK);
   long unsigned int period_size = 1024;
   unsigned int freq = 44100;
   unsigned int periods = 2;
@@ -34,11 +35,13 @@ int main()
   int dir = 0;
   snd_pcm_hw_params_t *hw_params = NULL;
   snd_pcm_hw_params_any(pcm_handle, hw_params);
-  snd_pcm_hw_params_set_access(pcm_handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED);
+  snd_pcm_hw_params_set_access(pcm_handle, hw_params,
+                               SND_PCM_ACCESS_RW_INTERLEAVED);
   snd_pcm_hw_params_set_format(pcm_handle, hw_params, SND_PCM_FORMAT_S16_LE);
   snd_pcm_hw_params_set_rate_near(pcm_handle, hw_params, &freq, &dir);
   snd_pcm_hw_params_set_channels(pcm_handle, hw_params, 2);
-  snd_pcm_hw_params_set_period_size_near(pcm_handle, hw_params, &period_size, &dir);
+  snd_pcm_hw_params_set_period_size_near(pcm_handle, hw_params, &period_size,
+                                         &dir);
   snd_pcm_hw_params_set_periods_min(pcm_handle, hw_params, &periods, &dir);
   snd_pcm_hw_params_set_periods_first(pcm_handle, hw_params, &periods, &dir);
   snd_pcm_hw_params(pcm_handle, hw_params);
@@ -73,7 +76,8 @@ int main()
   unsigned int depthbuffer;
   glGenTextures(1, &depthbuffer);
   glBindTexture(GL_TEXTURE_2D, depthbuffer);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 800, 600, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 800, 600, 0,
+               GL_DEPTH_COMPONENT, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -86,7 +90,7 @@ int main()
   glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, backbuffer, 0);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthbuffer, 0);
-  glDrawBuffers(2, (GLenum[]) { GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT });
+  glDrawBuffers(2, (GLenum[]){GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT});
 
   // Start the Timer
   struct timespec time;
@@ -94,25 +98,38 @@ int main()
   uint64_t timerCurrent = (time.tv_sec * 10E8 + time.tv_nsec);
   uint64_t lag = 0.0;
 
-  int mouseX, mouseY, mouseL, mouseR;
+  int mousePosX = 0;
+  int mousePosY = 0;
+  int mouseClickX = 0;
+  int mouseClickY = 0;
+  int dragDeltaX = 0;
+  int dragDeltaY = 0;
+
   while (1)
   {
     XEvent e;
     XNextEvent(display, &e);
-    if (e.type == ClientMessage && e.xclient.data.l[0] == (long int)deleteWindow)
+    if (e.type == ClientMessage &&
+        e.xclient.data.l[0] == (long int)deleteWindow)
       break;
 
     // Mouse Cursor
-    if (e.type == MotionNotify)
-      mouseX = e.xmotion.x, mouseY = e.xmotion.y;
+    if (e.type == MotionNotify && e.xbutton.button == 1)
+    {
+      dragDeltaX = (mousePosX = e.xmotion.x) - mousePosX;
+      dragDeltaY = (mousePosY = e.xmotion.y) - mousePosY;
+    }
     else if (e.type == ButtonPress && e.xbutton.button == 1)
-      mouseL = 1;
-    else if (e.type == ButtonRelease && e.xbutton.button == 1)
-      mouseL = 0;
-    else if (e.type == ButtonPress && e.xbutton.button == 3)
-      mouseR = 1;
-    else if (e.type == ButtonRelease && e.xbutton.button == 3)
-      mouseR = 0;
+    {
+      mousePosX = e.xmotion.x;
+      mousePosY = e.xmotion.y;
+    }
+    else if (e.type == ButtonRelease && e.xbutton.button == 1 &&
+             dragDeltaY + dragDeltaY == 0.0f)
+    {
+      mouseClickX = e.xmotion.x;
+      mouseClickY = e.xmotion.y;
+    }
 
     // Update Timer
     clock_gettime(CLOCK_MONOTONIC, &time);

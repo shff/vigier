@@ -2,19 +2,27 @@
 #include <dsound.h>
 #include <windows.h>
 
-float mousePosX, mousePosY, mouseClickX, mouseClickY;
+float mouseDownX, mouseDownY, mouseClickX, mouseClickY, dragDeltaX, dragDeltaY;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   switch (uMsg)
   {
+    case WM_LBUTTONDOWN:
+      mouseDownX = LOWORD(lParam);
+      mouseDownY = HIWORD(lParam);
+      break;
     case WM_LBUTTONUP:
-      mouseClickX = mousePosX = LOWORD(lParam);
-      mouseClickY = mousePosY = HIWORD(lParam);
+      if (dragDeltaX + dragDeltaY > 0.0f)
+        break;
+      mouseClickX = LOWORD(lParam);
+      mouseClickY = HIWORD(lParam);
       break;
     case WM_MOUSEMOVE:
-      mousePosX = LOWORD(lParam);
-      mousePosY = HIWORD(lParam);
+      if (!(wParam & MK_LBUTTON))
+        break;
+      dragDeltaX += ((mouseDownX = LOWORD(lParam)) - mouseDownX);
+      dragDeltaY += ((mouseDownY = HIWORD(lParam)) - mouseDownY);
       break;
     case WM_DESTROY: PostQuitMessage(0); return 0;
   }
@@ -135,8 +143,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   long long lag = 0.0;
 
   // Reset Deltas
-  mousePosX = 0.0f;
-  mousePosY = 0.0f;
+  mouseDownX = 0.0f;
+  mouseDownY = 0.0f;
   mouseClickX = 0.0f;
   mouseClickY = 0.0f;
 
@@ -161,8 +169,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
 
     // Reset Deltas
-    mousePosX = 0.0f;
-    mousePosY = 0.0f;
+    dragDeltaX = 0.0f;
+    dragDeltaY = 0.0f;
     mouseClickX = 0.0f;
     mouseClickY = 0.0f;
 

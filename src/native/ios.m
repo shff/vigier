@@ -34,8 +34,7 @@ NSString *shader =
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
 @property(nonatomic, assign) CGPoint mouseClick;
-@property(nonatomic, assign) float dragDeltaX;
-@property(nonatomic, assign) float dragDeltaY;
+@property(nonatomic, assign) float dragDeltaX, dragDeltaY;
 @end
 
 @implementation App
