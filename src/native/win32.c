@@ -4,7 +4,8 @@
 
 float mouseDownX, mouseDownY, mouseClickX, mouseClickY, dragDeltaX, dragDeltaY;
 
-LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
+                            LPARAM lParam)
 {
   if (message == WM_LBUTTONDOWN)
   {
@@ -29,13 +30,12 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
   return DefWindowProc(window, message, wParam, lParam);
 }
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                    PWSTR pCmdLine, int nCmdShow)
+int main(int argc, char const *argv[])
 {
   // Create Window
   HINSTANCE instance = GetModuleHandleW(NULL);
   RegisterClass(&(WNDCLASS){.lpfnWndProc = WindowProc,
-                            .hInstance = instance,
+                            .hInstance = GetModuleHandle(NULL),
                             .lpszClassName = "App"});
   HWND window = CreateWindowEx(0, "App", "App", WS_OVERLAPPEDWINDOW,
                                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,

@@ -68,7 +68,7 @@ jobs:
       - name: Build Library
         run: cargo build --release --lib --target ${{ matrix.platform.target }}
       - name: Build Binaries
-        if: (!contains(matrix.platform.target, 'linux-android') && !contains(matrix.platform.target, 'windows'))
+        if: (!contains(matrix.platform.target, 'linux-android'))
         run: cargo build --release --bin gen --target ${{ matrix.platform.target }}
       - name: Build Android APK
         if: contains(matrix.platform.target, 'android')
