@@ -2,10 +2,20 @@
 #include <dsound.h>
 #include <windows.h>
 
+float mousePosX, mousePosY, mouseClickX, mouseClickY;
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   switch (uMsg)
   {
+    case WM_LBUTTONUP:
+      mouseClickX = mousePosX = LOWORD(lParam);
+      mouseClickY = mousePosY = HIWORD(lParam);
+      break;
+    case WM_MOUSEMOVE:
+      mousePosX = LOWORD(lParam);
+      mousePosY = HIWORD(lParam);
+      break;
     case WM_DESTROY: PostQuitMessage(0); return 0;
   }
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -124,30 +134,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   QueryPerformanceCounter(&timerCurrent);
   long long lag = 0.0;
 
-  int done = FALSE;
-  while (!done)
+  // Reset Deltas
+  mousePosX = 0.0f;
+  mousePosY = 0.0f;
+  mouseClickX = 0.0f;
+  mouseClickY = 0.0f;
+
+  MSG msg = {0};
+  while (msg.message != WM_QUIT)
   {
-    MSG msg;
     while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
-      if (WM_QUIT == msg.message)
-      {
-        done = TRUE;
-        continue;
-      }
-      else
-      {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-      }
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
     }
-
-    // Mouse state
-    POINT mousePos;
-    GetCursorPos(&mousePos);
-    ScreenToClient(window, &mousePos);
-    int mouseL = GetAsyncKeyState(VK_LBUTTON) & 1;
-    int mouseR = GetAsyncKeyState(VK_RBUTTON) & 1;
 
     // Update Timer
     long long timerNext;
@@ -159,6 +159,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     for (lag += timerDelta; lag >= 1.0 / 60.0; lag -= 1.0 / 60.0)
     {
     }
+
+    // Reset Deltas
+    mousePosX = 0.0f;
+    mousePosY = 0.0f;
+    mouseClickX = 0.0f;
+    mouseClickY = 0.0f;
 
     // Set Viewport and Blank Colors
     RECT rect;
