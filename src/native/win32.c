@@ -4,29 +4,29 @@
 
 float mouseDownX, mouseDownY, mouseClickX, mouseClickY, dragDeltaX, dragDeltaY;
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 {
-  switch (uMsg)
+  if (message == WM_LBUTTONDOWN)
   {
-    case WM_LBUTTONDOWN:
-      mouseDownX = LOWORD(lParam);
-      mouseDownY = HIWORD(lParam);
-      break;
-    case WM_LBUTTONUP:
-      if (dragDeltaX + dragDeltaY > 0.0f)
-        break;
-      mouseClickX = LOWORD(lParam);
-      mouseClickY = HIWORD(lParam);
-      break;
-    case WM_MOUSEMOVE:
-      if (!(wParam & MK_LBUTTON))
-        break;
-      dragDeltaX += ((mouseDownX = LOWORD(lParam)) - mouseDownX);
-      dragDeltaY += ((mouseDownY = HIWORD(lParam)) - mouseDownY);
-      break;
-    case WM_DESTROY: PostQuitMessage(0); return 0;
+    mouseDownX = LOWORD(lParam);
+    mouseDownY = HIWORD(lParam);
   }
-  return DefWindowProc(hwnd, uMsg, wParam, lParam);
+  else if (message == WM_LBUTTONUP && dragDeltaX + dragDeltaY > 0.0f)
+  {
+    mouseClickX = LOWORD(lParam);
+    mouseClickY = HIWORD(lParam);
+  }
+  else if (message == WM_MOUSEMOVE && wParam & MK_LBUTTON)
+  {
+    dragDeltaX += ((mouseDownX = LOWORD(lParam)) - mouseDownX);
+    dragDeltaY += ((mouseDownY = HIWORD(lParam)) - mouseDownY);
+  }
+  else if (message == WM_DESTROY)
+  {
+    PostQuitMessage(0);
+    return 0;
+  }
+  return DefWindowProc(window, message, wParam, lParam);
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
