@@ -248,6 +248,8 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)mouseUp:(NSEvent *)event
 {
+  if (!CGCursorIsVisible()) [NSCursor unhide];
+  CGAssociateMouseAndMouseCursorPosition(true);
   if ([event clickCount])
   {
     _mouseClickX = [event locationInWindow].x;
@@ -257,6 +259,8 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)mouseDragged:(NSEvent *)event
 {
+  if (CGCursorIsVisible()) [NSCursor hide];
+  CGAssociateMouseAndMouseCursorPosition(false);
   _dragDeltaX += [event deltaX];
   _dragDeltaY += [event deltaY];
 }
