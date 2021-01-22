@@ -33,7 +33,7 @@ NSString *shader =
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
-@property(nonatomic, assign) CGPoint mouseClick;
+@property(nonatomic, assign) float mouseClickX, mouseClickY;
 @property(nonatomic, assign) float dragDeltaX, dragDeltaY;
 @end
 
@@ -81,7 +81,8 @@ NSString *shader =
   _lag = 0.0;
 
   // Reset Deltas
-  _mouseClick = CGPointMake(0.0f, 0.0f);
+  _mouseClickX = 0.0f;
+  _mouseClickY = 0.0f;
   _dragDeltaX = 0.0f;
   _dragDeltaY = 0.0f;
 
@@ -124,7 +125,8 @@ NSString *shader =
     }
 
     // Reset Deltas
-    _mouseClick = CGPointMake(0.0f, 0.0f);
+    _mouseClickX = 0.0f;
+    _mouseClickY = 0.0f;
     _dragDeltaX = 0.0f;
     _dragDeltaY = 0.0f;
 
@@ -152,7 +154,8 @@ NSString *shader =
 {
   if (recognizer.state == UIGestureRecognizerStateRecognized)
   {
-    _mouseClick = [recognizer locationInView:recognizer.view];
+    _mouseClickX = [recognizer locationInView:recognizer.view].x;
+    _mouseClickY = [recognizer locationInView:recognizer.view].y;
   }
 }
 
