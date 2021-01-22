@@ -57,6 +57,7 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) float mouseClickX, mouseClickY;
 @property(nonatomic, assign) float dragDeltaX, dragDeltaY;
 @property(nonatomic, assign) float moveDeltaX, moveDeltaY;
+@property(nonatomic, assign) int mouseMode;
 @end
 
 @implementation App
@@ -158,6 +159,7 @@ static OSStatus audioCallback(void *inRefCon,
     _lag = 0.0;
 
     // Reset Deltas
+    _mouseMode = 0;
     _mouseClickX = 0.0f;
     _mouseClickY = 0.0f;
     _moveDeltaX = 0.0f;
@@ -242,14 +244,18 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)mouseMoved:(NSEvent *)event
 {
+  if (![_window.contentView hitTest:[event locationInWindow]])
+    [self toggleMouse:true];
+  else if (_mouseMode == 1)
+    [self toggleMouse:false];
   _moveDeltaX += [event deltaX];
   _moveDeltaY += [event deltaY];
 }
 
 - (void)mouseUp:(NSEvent *)event
 {
-  if (!CGCursorIsVisible()) [NSCursor unhide];
-  CGAssociateMouseAndMouseCursorPosition(true);
+  if (_mouseMode == 2)
+    [self toggleMouse:true];
   if ([event clickCount])
   {
     _mouseClickX = [event locationInWindow].x;
@@ -259,8 +265,8 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)mouseDragged:(NSEvent *)event
 {
-  if (CGCursorIsVisible()) [NSCursor hide];
-  CGAssociateMouseAndMouseCursorPosition(false);
+  if (_mouseMode == 2)
+    [self toggleMouse:false];
   _dragDeltaX += [event deltaX];
   _dragDeltaY += [event deltaY];
 }
@@ -268,6 +274,20 @@ static OSStatus audioCallback(void *inRefCon,
 - (void)windowWillClose:(NSWindow *)sender
 {
   [NSApp terminate:nil];
+}
+
+- (void)toggleMouse:(bool)mode
+{
+  if (mode && !CGCursorIsVisible())
+  {
+    [NSCursor unhide];
+    CGAssociateMouseAndMouseCursorPosition(true);
+  }
+  else if (!mode && CGCursorIsVisible())
+  {
+    [NSCursor hide];
+    CGAssociateMouseAndMouseCursorPosition(false);
+  }
 }
 @end
 
