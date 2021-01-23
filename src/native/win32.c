@@ -32,6 +32,9 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
 
 int main(int argc, char const *argv[])
 {
+  // Disable Screensaver
+  SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED);
+
   // Create Window
   HINSTANCE instance = GetModuleHandleW(NULL);
   RegisterClass(&(WNDCLASS){.lpfnWndProc = WindowProc,
@@ -202,6 +205,9 @@ int main(int argc, char const *argv[])
   bufferTex->lpVtbl->Release(bufferTex);
   dev->lpVtbl->Release(dev);
   context->lpVtbl->Release(context);
+
+  // Re-enable Screensaver
+  SetThreadExecutionState(ES_CONTINUOUS);
 
   return 0;
 }
