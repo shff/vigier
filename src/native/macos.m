@@ -55,7 +55,6 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
 @property(nonatomic, assign) float mouseClickX, mouseClickY;
-@property(nonatomic, assign) float dragDeltaX, dragDeltaY;
 @property(nonatomic, assign) float moveDeltaX, moveDeltaY;
 @property(nonatomic, assign) int mouseMode;
 @end
@@ -159,13 +158,11 @@ static OSStatus audioCallback(void *inRefCon,
     _lag = 0.0;
 
     // Reset Deltas
-    _mouseMode = 0;
+    _mouseMode = 2;
     _mouseClickX = 0.0f;
     _mouseClickY = 0.0f;
     _moveDeltaX = 0.0f;
     _moveDeltaY = 0.0f;
-    _dragDeltaX = 0.0f;
-    _dragDeltaY = 0.0f;
 
     // Initialize loop
     [NSTimer scheduledTimerWithTimeInterval:1.0 / 60.0
@@ -197,8 +194,6 @@ static OSStatus audioCallback(void *inRefCon,
     _mouseClickY = 0.0f;
     _moveDeltaX = 0.0f;
     _moveDeltaY = 0.0f;
-    _dragDeltaX = 0.0f;
-    _dragDeltaY = 0.0f;
 
     // Renderer
     id<CAMetalDrawable> drawable = [_layer nextDrawable];
@@ -245,17 +240,23 @@ static OSStatus audioCallback(void *inRefCon,
 - (void)mouseMoved:(NSEvent *)event
 {
   if (![_window.contentView hitTest:[event locationInWindow]])
+  {
     [self toggleMouse:true];
+  }
   else if (_mouseMode == 1)
+  {
     [self toggleMouse:false];
-  _moveDeltaX += [event deltaX];
-  _moveDeltaY += [event deltaY];
+    _moveDeltaX += [event deltaX];
+    _moveDeltaY += [event deltaY];
+  }
 }
 
 - (void)mouseUp:(NSEvent *)event
 {
   if (_mouseMode == 2)
+  {
     [self toggleMouse:true];
+  }
   if ([event clickCount])
   {
     _mouseClickX = [event locationInWindow].x;
@@ -266,9 +267,11 @@ static OSStatus audioCallback(void *inRefCon,
 - (void)mouseDragged:(NSEvent *)event
 {
   if (_mouseMode == 2)
+  {
     [self toggleMouse:false];
-  _dragDeltaX += [event deltaX];
-  _dragDeltaY += [event deltaY];
+    _moveDeltaX += [event deltaX];
+    _moveDeltaY += [event deltaY];
+  }
 }
 
 - (void)windowWillClose:(NSWindow *)sender
