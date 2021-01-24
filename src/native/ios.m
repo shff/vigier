@@ -33,8 +33,8 @@ NSString *shader =
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
-@property(nonatomic, assign) float mouseClickX, mouseClickY;
-@property(nonatomic, assign) float dragDeltaX, dragDeltaY;
+@property(nonatomic, assign) float clickX, clickY;
+@property(nonatomic, assign) float deltaX, deltaY;
 @end
 
 @implementation App
@@ -81,10 +81,10 @@ NSString *shader =
   _lag = 0.0;
 
   // Reset Deltas
-  _mouseClickX = 0.0f;
-  _mouseClickY = 0.0f;
-  _dragDeltaX = 0.0f;
-  _dragDeltaY = 0.0f;
+  _clickX = 0.0f;
+  _clickY = 0.0f;
+  _deltaX = 0.0f;
+  _deltaY = 0.0f;
 
   // Add gesture recognizers
   [_mainWindow.rootViewController.view
@@ -125,10 +125,10 @@ NSString *shader =
     }
 
     // Reset Deltas
-    _mouseClickX = 0.0f;
-    _mouseClickY = 0.0f;
-    _dragDeltaX = 0.0f;
-    _dragDeltaY = 0.0f;
+    _clickX = 0.0f;
+    _clickY = 0.0f;
+    _deltaX = 0.0f;
+    _deltaY = 0.0f;
 
     // Renderer
     id<CAMetalDrawable> drawable = [_layer nextDrawable];
@@ -154,8 +154,8 @@ NSString *shader =
 {
   if (recognizer.state == UIGestureRecognizerStateRecognized)
   {
-    _mouseClickX = [recognizer locationInView:recognizer.view].x;
-    _mouseClickY = [recognizer locationInView:recognizer.view].y;
+    _clickX = [recognizer locationInView:recognizer.view].x;
+    _clickY = [recognizer locationInView:recognizer.view].y;
   }
 }
 
@@ -163,8 +163,8 @@ NSString *shader =
 {
   if (recognizer.state == UIGestureRecognizerStateRecognized)
   {
-    _dragDeltaX += [recognizer translationInView:recognizer.view].y;
-    _dragDeltaY += [recognizer translationInView:recognizer.view].y;
+    _deltaX += [recognizer translationInView:recognizer.view].y;
+    _deltaY += [recognizer translationInView:recognizer.view].y;
   }
 }
 

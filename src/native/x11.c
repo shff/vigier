@@ -98,12 +98,12 @@ int main()
   uint64_t timerCurrent = (time.tv_sec * 10E8 + time.tv_nsec);
   uint64_t lag = 0.0;
 
-  int mousePosX = 0;
-  int mousePosY = 0;
-  int mouseClickX = 0;
-  int mouseClickY = 0;
-  int dragDeltaX = 0;
-  int dragDeltaY = 0;
+  int mouseX = 0;
+  int mouseY = 0;
+  int clickX = 0;
+  int clickY = 0;
+  int deltaX = 0;
+  int deltaY = 0;
 
   while (1)
   {
@@ -116,19 +116,19 @@ int main()
     // Mouse Cursor
     if (e.type == MotionNotify && e.xbutton.button == 1)
     {
-      dragDeltaX = (mousePosX = e.xmotion.x) - mousePosX;
-      dragDeltaY = (mousePosY = e.xmotion.y) - mousePosY;
+      deltaX = (mouseX = e.xmotion.x) - mouseX;
+      deltaY = (mouseY = e.xmotion.y) - mouseY;
     }
     else if (e.type == ButtonPress && e.xbutton.button == 1)
     {
-      mousePosX = e.xmotion.x;
-      mousePosY = e.xmotion.y;
+      mouseX = e.xmotion.x;
+      mouseY = e.xmotion.y;
     }
     else if (e.type == ButtonRelease && e.xbutton.button == 1 &&
-             dragDeltaY + dragDeltaY == 0.0f)
+             deltaY + deltaY == 0.0f)
     {
-      mouseClickX = e.xmotion.x;
-      mouseClickY = e.xmotion.y;
+      clickX = e.xmotion.x;
+      clickY = e.xmotion.y;
     }
 
     // Update Timer

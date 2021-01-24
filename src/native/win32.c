@@ -2,25 +2,30 @@
 #include <dsound.h>
 #include <windows.h>
 
-float mouseDownX, mouseDownY, mouseClickX, mouseClickY, dragDeltaX, dragDeltaY;
+int mouseMode = 0;
+float mouseX, mouseY;
+float clickX, clickY;
+float deltaX, deltaY;
 
 LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
                             LPARAM lParam)
 {
   if (message == WM_LBUTTONDOWN)
   {
-    mouseDownX = LOWORD(lParam);
-    mouseDownY = HIWORD(lParam);
+    mouseX = LOWORD(lParam);
+    mouseY = HIWORD(lParam);
   }
-  else if (message == WM_LBUTTONUP && dragDeltaX + dragDeltaY > 0.0f)
+  else if (message == WM_LBUTTONUP && deltaX + deltaY > 0.0f)
   {
-    mouseClickX = LOWORD(lParam);
-    mouseClickY = HIWORD(lParam);
+    SetCursor(LoadCursorW(NULL, IDC_ARROW));
+    clickX = LOWORD(lParam);
+    clickY = HIWORD(lParam);
   }
-  else if (message == WM_MOUSEMOVE && wParam & MK_LBUTTON)
+  else if (message == WM_MOUSEMOVE && mouseMode != 0)
   {
-    dragDeltaX += ((mouseDownX = LOWORD(lParam)) - mouseDownX);
-    dragDeltaY += ((mouseDownY = HIWORD(lParam)) - mouseDownY);
+    SetCursor(NULL);
+    deltaX += ((mouseX = LOWORD(lParam)) - mouseX);
+    deltaY += ((mouseY = HIWORD(lParam)) - mouseY);
   }
   else if (message == WM_DESTROY)
   {
@@ -146,10 +151,10 @@ int main(int argc, char const *argv[])
   long long lag = 0.0;
 
   // Reset Deltas
-  mouseDownX = 0.0f;
-  mouseDownY = 0.0f;
-  mouseClickX = 0.0f;
-  mouseClickY = 0.0f;
+  mouseX = 0.0f;
+  mouseY = 0.0f;
+  clickX = 0.0f;
+  clickY = 0.0f;
 
   MSG msg = {0};
   while (msg.message != WM_QUIT)
@@ -172,10 +177,10 @@ int main(int argc, char const *argv[])
     }
 
     // Reset Deltas
-    dragDeltaX = 0.0f;
-    dragDeltaY = 0.0f;
-    mouseClickX = 0.0f;
-    mouseClickY = 0.0f;
+    deltaX = 0.0f;
+    deltaY = 0.0f;
+    clickX = 0.0f;
+    clickY = 0.0f;
 
     // Set Viewport and Blank Colors
     RECT rect;

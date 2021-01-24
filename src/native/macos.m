@@ -54,8 +54,8 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
-@property(nonatomic, assign) float mouseClickX, mouseClickY;
-@property(nonatomic, assign) float moveDeltaX, moveDeltaY;
+@property(nonatomic, assign) float clickX, clickY;
+@property(nonatomic, assign) float deltaX, deltaY;
 @property(nonatomic, assign) int mouseMode;
 @end
 
@@ -159,10 +159,10 @@ static OSStatus audioCallback(void *inRefCon,
 
     // Reset Deltas
     _mouseMode = 2;
-    _mouseClickX = 0.0f;
-    _mouseClickY = 0.0f;
-    _moveDeltaX = 0.0f;
-    _moveDeltaY = 0.0f;
+    _clickX = 0.0f;
+    _clickY = 0.0f;
+    _deltaX = 0.0f;
+    _deltaY = 0.0f;
 
     // Initialize loop
     [NSTimer scheduledTimerWithTimeInterval:1.0 / 60.0
@@ -190,10 +190,10 @@ static OSStatus audioCallback(void *inRefCon,
     }
 
     // Reset Deltas
-    _mouseClickX = 0.0f;
-    _mouseClickY = 0.0f;
-    _moveDeltaX = 0.0f;
-    _moveDeltaY = 0.0f;
+    _clickX = 0.0f;
+    _clickY = 0.0f;
+    _deltaX = 0.0f;
+    _deltaY = 0.0f;
 
     // Renderer
     id<CAMetalDrawable> drawable = [_layer nextDrawable];
@@ -246,8 +246,8 @@ static OSStatus audioCallback(void *inRefCon,
   else if (_mouseMode == 1)
   {
     [self toggleMouse:false];
-    _moveDeltaX += [event deltaX];
-    _moveDeltaY += [event deltaY];
+    _deltaX += [event deltaX];
+    _deltaY += [event deltaY];
   }
 }
 
@@ -259,8 +259,8 @@ static OSStatus audioCallback(void *inRefCon,
   }
   if ([event clickCount])
   {
-    _mouseClickX = [event locationInWindow].x;
-    _mouseClickY = [event locationInWindow].x;
+    _clickX = [event locationInWindow].x;
+    _clickY = [event locationInWindow].x;
   }
 }
 
@@ -269,8 +269,8 @@ static OSStatus audioCallback(void *inRefCon,
   if (_mouseMode == 2)
   {
     [self toggleMouse:false];
-    _moveDeltaX += [event deltaX];
-    _moveDeltaY += [event deltaY];
+    _deltaX += [event deltaX];
+    _deltaY += [event deltaY];
   }
 }
 
