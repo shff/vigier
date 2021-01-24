@@ -33,6 +33,7 @@ NSString *shader =
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
+@property(nonatomic, assign) int mouseMode;
 @property(nonatomic, assign) float clickX, clickY;
 @property(nonatomic, assign) float deltaX, deltaY;
 @end
@@ -81,6 +82,7 @@ NSString *shader =
   _lag = 0.0;
 
   // Reset Deltas
+  _mouseMode = 2;
   _clickX = 0.0f;
   _clickY = 0.0f;
   _deltaX = 0.0f;
@@ -152,7 +154,7 @@ NSString *shader =
 
 - (void)onTap:(UITapGestureRecognizer *)recognizer
 {
-  if (recognizer.state == UIGestureRecognizerStateRecognized)
+  if (_mouseMode != 1 && recognizer.state == UIGestureRecognizerStateRecognized)
   {
     _clickX = [recognizer locationInView:recognizer.view].x;
     _clickY = [recognizer locationInView:recognizer.view].y;
@@ -161,7 +163,7 @@ NSString *shader =
 
 - (void)onDrag:(UITapGestureRecognizer *)recognizer
 {
-  if (recognizer.state == UIGestureRecognizerStateRecognized)
+  if (_mouseMode != 0 && recognizer.state == UIGestureRecognizerStateRecognized)
   {
     _deltaX += [recognizer translationInView:recognizer.view].y;
     _deltaY += [recognizer translationInView:recognizer.view].y;
