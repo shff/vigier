@@ -3,23 +3,26 @@
 #include <emscripten/html5.h>
 #include <webgpu/webgpu.h>
 
+int mouseMode = 0;
 double timerCurrent = 0, lag = 0, w = 0, h = 0;
 float scale, clickX, clickY, mouseX, mouseY, deltaX = 0.0f, deltaY = 0.0f;
 
 int mouseCallback(int type, const EmscriptenMouseEvent *event, void *data)
 {
-  if (event->button == 0 && type == EMSCRIPTEN_EVENT_MOUSEDOWN)
+  if (type == EMSCRIPTEN_EVENT_MOUSEDOWN && event->button == 0)
   {
     mouseX = event->targetX * scale;
     mouseY = event->targetY * scale;
   }
-  if (event->button == 0 && type == EMSCRIPTEN_EVENT_MOUSEUP)
+  if (type == EMSCRIPTEN_EVENT_MOUSEUP && event->button == 0)
   {
+    EM_ASM(document.exitPointerLock());
     clickX = event->targetX * scale;
     clickY = event->targetY * scale;
   }
-  if (event->buttons == 1 && type == EMSCRIPTEN_EVENT_MOUSEMOVE)
+  if (type == EMSCRIPTEN_EVENT_MOUSEMOVE && event->buttons == mouseMode - 1)
   {
+    EM_ASM(Module['canvas'].requestPointerLock());
     deltaX = (mouseX = event->targetX * scale) - mouseX;
     deltaY = (mouseY = event->targetY * scale) - mouseY;
   }
