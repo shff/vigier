@@ -10,6 +10,8 @@ float deltaX, deltaY;
 LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
                             LPARAM lParam)
 {
+  RECT rect;
+  GetWindowRect(window, &rect);
   if (message == WM_LBUTTONDOWN)
   {
     mouseX = LOWORD(lParam);
@@ -17,12 +19,18 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
   }
   else if (message == WM_LBUTTONUP && deltaX + deltaY > 0.0f)
   {
-    SetCursor(LoadCursorW(NULL, IDC_ARROW));
+    if (mouseMode != 1)
+    {
+      ClipCursor(NULL);
+      SetCursor(LoadCursorW(NULL, IDC_ARROW));
+    }
     clickX = LOWORD(lParam);
     clickY = HIWORD(lParam);
   }
-  else if (message == WM_MOUSEMOVE && mouseMode != 0)
+  else if (message == WM_MOUSEMOVE &&
+           ((wParam & MK_LBUTTON && mouseMode == 2) || mouseMode == 1))
   {
+    ClipCursor(&rect);
     SetCursor(NULL);
     deltaX += ((mouseX = LOWORD(lParam)) - mouseX);
     deltaY += ((mouseY = HIWORD(lParam)) - mouseY);
