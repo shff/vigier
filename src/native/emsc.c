@@ -3,7 +3,10 @@
 #include <emscripten/html5.h>
 #include <webgpu/webgpu.h>
 
+int glDrawBuffers(GLsizei n, const GLenum * bufs);
+
 int mouseMode = 0;
+unsigned int backbuffer, depthbuffer, gbuffer;
 double timerCurrent = 0, lag = 0, w = 0, h = 0;
 float scale, clickX, clickY, mouseX, mouseY, deltaX = 0.0f, deltaY = 0.0f;
 
@@ -23,8 +26,10 @@ int mouseCallback(int type, const EmscriptenMouseEvent *event, void *data)
   if (type == EMSCRIPTEN_EVENT_MOUSEMOVE && event->buttons == mouseMode - 1)
   {
     EM_ASM(Module['canvas'].requestPointerLock());
-    deltaX = (mouseX = event->targetX * scale) - mouseX;
-    deltaY = (mouseY = event->targetY * scale) - mouseY;
+    deltaX = event->targetX * scale - mouseX;
+    deltaY = event->targetY * scale - mouseY;
+    mouseX = event->targetX * scale;
+    mouseY = event->targetY * scale;
   }
 
   return 1;
@@ -49,9 +54,13 @@ int drawFrame()
   {
   }
 
-  // Renderer
+  // Render to G-Buffer
+  glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
   glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   return 1;
 }
@@ -64,10 +73,39 @@ int main(int argc, char *argv[])
   emscripten_get_element_css_size("#app", &w, &h);
   emscripten_set_canvas_element_size("#app", w, h);
 
+  // Initialize OpenGL
   EmscriptenWebGLContextAttributes attrs;
   emscripten_webgl_init_context_attributes(&attrs);
   int context = emscripten_webgl_create_context("#app", &attrs);
   emscripten_webgl_make_context_current(context);
+
+  // Create G-Buffer
+  glGenTextures(1, &backbuffer);
+  glBindTexture(GL_TEXTURE_2D, backbuffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+  // Create Z-Buffer
+  glGenTextures(1, &depthbuffer);
+  glBindTexture(GL_TEXTURE_2D, depthbuffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 800, 600, 0,
+               GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+  // Create Framebuffer
+  glGenFramebuffers(1, &gbuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backbuffer, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthbuffer, 0);
+  glDrawBuffers(2, (GLenum[]){GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT});
 
   emscripten_set_mousedown_callback("#app", 0, true, mouseCallback);
   emscripten_set_mouseup_callback("#app", 0, true, mouseCallback);
