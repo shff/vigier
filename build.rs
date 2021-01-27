@@ -62,6 +62,7 @@ fn main() {
     } else if target.contains("emscripten") {
         cc::Build::new()
             .file("src/native/emsc.c")
+            .flag("-Wno-unused-parameter")
             .compile("native.a");
     }
 }

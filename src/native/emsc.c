@@ -30,10 +30,11 @@ int mouseCallback(int type, const EmscriptenMouseEvent *event, void *data)
   return 1;
 }
 
-int resizeCallback(int type, const EmscriptenMouseEvent *event, void *data)
+int resizeCallback(int type, const struct EmscriptenUiEvent *event, void *data)
 {
   emscripten_get_element_css_size("#app", &w, &h);
   emscripten_set_canvas_element_size("#app", w, h);
+  return 0;
 }
 
 int drawFrame()
