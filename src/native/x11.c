@@ -97,6 +97,7 @@ int main()
   clock_gettime(CLOCK_MONOTONIC, &time);
   uint64_t timerCurrent = (time.tv_sec * 10E8 + time.tv_nsec);
   uint64_t lag = 0.0;
+  uint64_t xscreenLag = 0.0;
 
   int mouseX = 0;
   int mouseY = 0;
@@ -136,6 +137,13 @@ int main()
     uint64_t timerNext = (time.tv_sec * 10E8 + time.tv_nsec);
     uint64_t timerDelta = timerNext - timerCurrent;
     timerCurrent = timerNext;
+
+    // Periodically reset the screensaver
+    xscreenLag += timerDelta;
+    if (xscreenLag > 30E9) {
+      xscreenLag = 0.0;
+      XResetScreenSaver(display);
+    }
 
     // Fixed updates
     for (lag += timerDelta; lag >= 1.0 / 60.0; lag -= 1.0 / 60.0)
