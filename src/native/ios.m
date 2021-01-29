@@ -2,6 +2,7 @@
 @import Foundation;
 @import Metal;
 @import QuartzCore;
+@import AudioToolbox;
 
 NSString *shader =
     @"#include <metal_stdlib>\n"
@@ -20,6 +21,26 @@ NSString *shader =
      "    constexpr sampler Sampler(coord::pixel,filter::nearest);"
      "    return half4(albedo.sample(Sampler, 0, 0).xyz, 1);"
      "}";
+
+static OSStatus audioCallback(void *inRefCon,
+                              AudioUnitRenderActionFlags *ioActionFlags,
+                              const AudioTimeStamp *inTimeStamp,
+                              UInt32 inBusNumber, UInt32 inNumberFrames,
+                              AudioBufferList *ioData)
+{
+  (void)inRefCon;
+  (void)ioActionFlags;
+  (void)inTimeStamp;
+  (void)inBusNumber;
+
+  Float32 *buffer = (Float32 *)ioData->mBuffers[0].mData;
+  for (UInt32 frame = 0; frame < inNumberFrames; frame++)
+  {
+    buffer[frame] = 0;
+  }
+
+  return 0;
+}
 
 @interface App : UIResponder <UIApplicationDelegate>
 @property(nonatomic, assign) UIWindow *mainWindow;
@@ -41,6 +62,35 @@ NSString *shader =
 @implementation App
 - (void)applicationDidFinishLaunching:(UIApplication *)application
 {
+  // Initialize Audio
+  AudioComponentDescription compDesc = {
+      .componentType = kAudioUnitType_Output,
+      .componentSubType = kAudioUnitSubType_GenericOutput,
+      .componentManufacturer = kAudioUnitManufacturer_Apple};
+  AudioStreamBasicDescription audioFormat = {
+      .mSampleRate = 44100.00,
+      .mFormatID = kAudioFormatLinearPCM,
+      .mFormatFlags =
+          kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved,
+      .mFramesPerPacket = 1,
+      .mChannelsPerFrame = 1,
+      .mBitsPerChannel = 32,
+      .mBytesPerPacket = 4,
+      .mBytesPerFrame = 4};
+
+  // Initialize Audio
+  AudioUnit audioUnit;
+  AudioComponentInstanceNew(AudioComponentFindNext(0, &compDesc), &audioUnit);
+  AudioUnitSetProperty(audioUnit, kAudioUnitProperty_StreamFormat,
+                       kAudioUnitScope_Input, 0, &audioFormat,
+                       sizeof(audioFormat));
+  AudioUnitSetProperty(audioUnit, kAudioUnitProperty_SetRenderCallback,
+                       kAudioUnitScope_Input, 0,
+                       &(AURenderCallbackStruct){audioCallback, NULL},
+                       sizeof(AURenderCallbackStruct));
+  AudioUnitInitialize(audioUnit);
+  AudioOutputUnitStart(audioUnit);
+
   // Initialize Metal
   _device = [MTLCreateSystemDefaultDevice() autorelease];
   _queue = [_device newCommandQueue];
