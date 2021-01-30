@@ -4,16 +4,12 @@
 #include <xinput.h>
 
 unsigned int mouseMode = 0;
-float mouseX, mouseY;
-float clickX, clickY;
-float deltaX, deltaY;
+float mouseX, mouseY, clickX, clickY, deltaX, deltaY;
 WINDOWPLACEMENT placement = {0};
 
 LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
                             LPARAM lParam)
 {
-  RECT rect;
-  GetWindowRect(window, &rect);
   if (message == WM_LBUTTONDOWN)
   {
     mouseX = LOWORD(lParam);
@@ -31,6 +27,8 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
   }
   else if (message == WM_MOUSEMOVE && wParam == mouseMode - 1)
   {
+    RECT rect;
+    GetWindowRect(window, &rect);
     ClipCursor(&rect);
     SetCursor(NULL);
     mouseX += (deltaX = LOWORD(lParam) - mouseX);
@@ -41,29 +39,24 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
     PostQuitMessage(0);
     return 0;
   }
+
+  // Toggle fullscreen
   else if (message == WM_SYSKEYDOWN && wParam == VK_RETURN &&
            HIWORD(lParam) & KF_ALTDOWN)
   {
-    // Toggle fullscreen
     DWORD windowStyle = GetWindowLong(window, GWL_STYLE);
     if (windowStyle & WS_OVERLAPPEDWINDOW)
     {
-      MONITORINFO mi = {0};
-      if (GetWindowPlacement(window, &placement) &&
-          GetMonitorInfo(MonitorFromWindow(window, MONITOR_DEFAULTTOPRIMARY),
-                         &mi))
-      {
-        SetWindowLong(window, GWL_STYLE, windowStyle & ~WS_OVERLAPPEDWINDOW);
-        SetWindowPos(window, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top,
-                     mi.rcMonitor.right - mi.rcMonitor.left,
-                     mi.rcMonitor.bottom - mi.rcMonitor.top,
-                     SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
-      }
+      GetWindowPlacement(window, &placement);
+      SetWindowLong(window, GWL_STYLE, windowStyle & ~WS_OVERLAPPEDWINDOW);
+      SetWindowPos(window, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN),
+                   GetSystemMetrics(SM_CYSCREEN),
+                   SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
     }
     else
     {
-      SetWindowLong(window, GWL_STYLE, windowStyle | WS_OVERLAPPEDWINDOW);
       SetWindowPlacement(window, &placement);
+      SetWindowLong(window, GWL_STYLE, windowStyle | WS_OVERLAPPEDWINDOW);
       SetWindowPos(window, NULL, 0, 0, 0, 0,
                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER |
                        SWP_FRAMECHANGED);
