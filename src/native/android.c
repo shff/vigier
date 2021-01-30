@@ -91,8 +91,7 @@ static void engine_handle_cmd(struct android_app *app, int32_t cmd)
 
 static int32_t engine_handle_input(struct android_app *app, AInputEvent *e)
 {
-  if (AInputEvent_getType(e) != AINPUT_EVENT_TYPE_MOTION)
-    return 0;
+  if (AInputEvent_getType(e) != AINPUT_EVENT_TYPE_MOTION) return 0;
 
   int32_t action = AMotionEvent_getAction(e) & AMOTION_EVENT_ACTION_MASK;
   float deltaX = AMotionEvent_getX(e, 0) - prevX;
@@ -145,8 +144,7 @@ void android_main(struct android_app *app)
   {
     while (ALooper_pollAll(1, 0, &events, (void **)&source) >= 0)
     {
-      if (source)
-        source->process(app, source);
+      if (source) source->process(app, source);
     }
 
     // Update Timer

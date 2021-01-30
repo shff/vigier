@@ -3,7 +3,7 @@
 #include <emscripten/html5.h>
 #include <webgpu/webgpu.h>
 
-int glDrawBuffers(GLsizei n, const GLenum * bufs);
+int glDrawBuffers(GLsizei n, const GLenum *bufs);
 
 int mouseMode = 0;
 unsigned int backbuffer, depthbuffer, gbuffer;
@@ -103,8 +103,10 @@ int main(int argc, char *argv[])
   // Create Framebuffer
   glGenFramebuffers(1, &gbuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backbuffer, 0);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthbuffer, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                         backbuffer, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                         depthbuffer, 0);
   glDrawBuffers(2, (GLenum[]){GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT});
 
   emscripten_set_mousedown_callback("#app", 0, true, mouseCallback);
