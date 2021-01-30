@@ -23,6 +23,11 @@ int main()
   Atom deleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", True);
   XSetWMProtocols(display, window, &deleteWindow, 1);
 
+  // Fullscreen Atoms
+  Atom stateAtom = XInternAtom(display, "_NET_WM_STATE", False);
+  Atom fullscreenAtom = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
+  int fullscreen = 0;
+
   // Initialize ALSA
   snd_pcm_t *pcm_handle;
   snd_pcm_open(&pcm_handle, "hw:0,0", SND_PCM_STREAM_PLAYBACK,
@@ -131,6 +136,20 @@ int main()
       clickX = e.xmotion.x;
       clickY = e.xmotion.y;
     }
+    else if (e.type == KeyPress && e.xkey.keycode == 13 &&
+             e.xkey.state & Mod1Mask)
+    {
+      fullscreen = !fullscreen;
+      XEvent event = {0};
+      event.xclient.window = window;
+      event.xclient.format = 32;
+      event.xclient.message_type = stateAtom;
+      event.xclient.data.l[0] = fullscreen;
+      event.xclient.data.l[1] = fullscreenAtom;
+      event.xclient.data.l[3] = 1;
+      XSendEvent(display, root, False,
+                 SubstructureNotifyMask | SubstructureRedirectMask, &event);
+    }
 
     // Update Timer
     clock_gettime(CLOCK_MONOTONIC, &time);
@@ -140,7 +159,8 @@ int main()
 
     // Periodically reset the screensaver
     xscreenLag += timerDelta;
-    if (xscreenLag > 30E9) {
+    if (xscreenLag > 30E9)
+    {
       xscreenLag = 0.0;
       XResetScreenSaver(display);
     }
