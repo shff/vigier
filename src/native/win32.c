@@ -1,6 +1,7 @@
 #include <d3d11.h>
 #include <dsound.h>
 #include <windows.h>
+#include <xinput.h>
 
 int mouseMode = 0;
 float mouseX, mouseY;
@@ -63,7 +64,7 @@ int main(int argc, char const *argv[])
   DirectSoundCreate(0, &dsound, 0);
   dsound->lpVtbl->SetCooperativeLevel(dsound, window, DSSCL_PRIORITY);
 
-  // Create Primary Buffer
+  // Create Primary Audio Buffer
   DSBUFFERDESC bufferDesc1 = {.dwSize = sizeof(DSBUFFERDESC),
                               .dwFlags = DSBCAPS_PRIMARYBUFFER};
   LPDIRECTSOUNDBUFFER primaryBuffer;
@@ -79,7 +80,7 @@ int main(int argc, char const *argv[])
   };
   primaryBuffer->lpVtbl->SetFormat(primaryBuffer, &format);
 
-  // Create Secondary Buffer
+  // Create Secondary Audio Buffer
   DSBUFFERDESC bufferDesc2 = {
       .dwSize = sizeof(DSBUFFERDESC),
       .dwBufferBytes = 1024,
@@ -88,7 +89,7 @@ int main(int argc, char const *argv[])
   LPDIRECTSOUNDBUFFER secondary_buffer;
   dsound->lpVtbl->CreateSoundBuffer(dsound, &bufferDesc2, &secondary_buffer, 0);
 
-  // Create Swap-Chain
+  // Create Direct3D Device and Swap-Chain
   DXGI_SWAP_CHAIN_DESC desc = {
       .BufferCount = 1,
       .BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM,
@@ -171,6 +172,16 @@ int main(int argc, char const *argv[])
     {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
+    }
+
+    // Get joystick input
+    XINPUT_STATE state = {0};
+    if (XInputGetState(0, &state) == ERROR_SUCCESS)
+    {
+      deltaX += state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
+      deltaX -= state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
+      deltaY += state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
+      deltaY -= state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP;
     }
 
     // Update Timer

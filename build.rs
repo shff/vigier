@@ -59,6 +59,7 @@ fn main() {
         println!("cargo:rustc-link-lib=d3d11");
         println!("cargo:rustc-link-lib=dxguid");
         println!("cargo:rustc-link-lib=dsound");
+        println!("cargo:rustc-link-lib=xinput");
     } else if target.contains("emscripten") {
         cc::Build::new()
             .file("src/native/emsc.c")
