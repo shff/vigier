@@ -123,6 +123,9 @@ int main()
     // Mouse Cursor
     if (e.type == MotionNotify && (e.xbutton.button == 1 || mouseMode == 1))
     {
+      XGrabPointer(display, window, True,
+                   ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+                   GrabModeAsync, GrabModeAsync, window, None, CurrentTime);
       XDefineCursor(display, window, None);
       mouseX += (deltaX = e.xmotion.x - mouseX);
       mouseX += (deltaY = e.xmotion.y - mouseY);
@@ -135,7 +138,7 @@ int main()
     else if (e.type == ButtonRelease && e.xbutton.button == 1 &&
              deltaY + deltaY == 0.0f)
     {
-      if (mouseMode != 1) XUndefineCursor(display, window);
+      if (mouseMode != 1) XUngrabPointer(display, CurrentTime);
       clickX = e.xmotion.x;
       clickY = e.xmotion.y;
     }
