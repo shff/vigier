@@ -142,6 +142,19 @@ int main()
       clickX = e.xmotion.x;
       clickY = e.xmotion.y;
     }
+    else if (e.type == KeyPress && e.xkey.keycode == 13 &&
+             e.xkey.state & Mod1Mask)
+    {
+      fullscreen = !fullscreen;
+      XSendEvent(display, root, False,
+                 SubstructureNotifyMask | SubstructureRedirectMask,
+                 &(XEvent){.xclient.window = window,
+                           .xclient.format = 32,
+                           .xclient.message_type = stateAtom,
+                           .xclient.data.l[0] = fullscreen,
+                           .xclient.data.l[1] = fullscreenAtom,
+                           .xclient.data.l[3] = 1});
+    }
 
     // Toggle Fullscreen
     else if (e.type == KeyPress && e.xkey.keycode == 13 &&
