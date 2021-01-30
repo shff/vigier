@@ -237,41 +237,34 @@ static OSStatus audioCallback(void *inRefCon,
   _pass1.colorAttachments[0].texture = _albedoTexture;
 }
 
-- (void)mouseMoved:(NSEvent *)event
+- (void)mouseMoved:(NSEvent *)e
 {
-  if (![_window.contentView hitTest:[event locationInWindow]])
-  {
+  if (![_window.contentView hitTest:[e locationInWindow]])
     [self toggleMouse:true];
-  }
-  else if (_mouseMode == 1)
-  {
-    [self toggleMouse:false];
-    _deltaX += [event deltaX];
-    _deltaY += [event deltaY];
-  }
+  else if (_mouseMode != 1)
+    return;
+
+  [self toggleMouse:false];
+  _deltaX += [e deltaX];
+  _deltaY += [e deltaY];
 }
 
-- (void)mouseUp:(NSEvent *)event
+- (void)mouseUp:(NSEvent *)e
 {
-  if (_mouseMode == 2)
-  {
-    [self toggleMouse:true];
-  }
-  if ([event clickCount])
-  {
-    _clickX = [event locationInWindow].x;
-    _clickY = [event locationInWindow].x;
-  }
+  if (_mouseMode == 2) [self toggleMouse:true];
+  if (![e clickCount]) return;
+
+  _clickX = [e locationInWindow].x;
+  _clickY = [e locationInWindow].x;
 }
 
-- (void)mouseDragged:(NSEvent *)event
+- (void)mouseDragged:(NSEvent *)e
 {
-  if (_mouseMode == 2)
-  {
-    [self toggleMouse:false];
-    _deltaX += [event deltaX];
-    _deltaY += [event deltaY];
-  }
+  if (_mouseMode != 2) return;
+
+  [self toggleMouse:false];
+  _deltaX += [e deltaX];
+  _deltaY += [e deltaY];
 }
 
 - (void)windowWillClose:(NSWindow *)sender
