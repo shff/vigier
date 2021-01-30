@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <xinput.h>
 
-int mouseMode = 0;
+unsigned int mouseMode = 0;
 float mouseX, mouseY;
 float clickX, clickY;
 float deltaX, deltaY;
@@ -29,13 +29,12 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
     clickX = LOWORD(lParam);
     clickY = HIWORD(lParam);
   }
-  else if (message == WM_MOUSEMOVE &&
-           ((wParam & MK_LBUTTON && mouseMode == 2) || mouseMode == 1))
+  else if (message == WM_MOUSEMOVE && wParam == mouseMode - 1)
   {
     ClipCursor(&rect);
     SetCursor(NULL);
-    deltaX += ((mouseX = LOWORD(lParam)) - mouseX);
-    deltaY += ((mouseY = HIWORD(lParam)) - mouseY);
+    mouseX += (deltaX = LOWORD(lParam) - mouseX);
+    mouseY += (deltaY = HIWORD(lParam) - mouseY);
   }
   else if (message == WM_DESTROY)
   {

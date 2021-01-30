@@ -5,8 +5,7 @@
 
 int glDrawBuffers(GLsizei n, const GLenum *bufs);
 
-int mouseMode = 0;
-unsigned int backbuffer, depthbuffer, gbuffer;
+unsigned int backbuffer, depthbuffer, gbuffer, mouseMode = 0;
 double timerCurrent = 0, lag = 0, w = 0, h = 0;
 float scale, clickX, clickY, mouseX, mouseY, deltaX = 0.0f, deltaY = 0.0f;
 

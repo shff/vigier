@@ -104,13 +104,13 @@ int main()
   uint64_t lag = 0.0;
   uint64_t xscreenLag = 0.0;
 
-  int mouseMode = 0;
+  unsigned int mouseMode = 0;
   int mouseX = 0;
   int mouseY = 0;
   int clickX = 0;
   int clickY = 0;
-  int deltaX = 0;
-  int deltaY = 0;
+  unsigned int deltaX = 0;
+  unsigned int deltaY = 0;
 
   while (1)
   {
@@ -121,7 +121,7 @@ int main()
       break;
 
     // Mouse Cursor
-    if (e.type == MotionNotify && (e.xbutton.button == 1 || mouseMode == 1))
+    if (e.type == MotionNotify && e.xbutton.button == mouseMode - 1)
     {
       XGrabPointer(display, window, True,
                    ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
