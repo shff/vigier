@@ -16,9 +16,9 @@ int main()
   int screen = DefaultScreen(display);
   Window root = RootWindow(display, screen);
   Window window = XCreateSimpleWindow(display, root, 10, 10, 640, 480, 1, 0, 0);
-  XSelectInput(display, window,
-               ExposureMask | KeyPressMask | ButtonPressMask |
-                   ButtonReleaseMask);
+  int eventMask =
+      ExposureMask | KeyPressMask | ButtonPressMask | ButtonReleaseMask;
+  XSelectInput(display, window, eventMask);
   XMapWindow(display, window);
   Atom deleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", True);
   XSetWMProtocols(display, window, &deleteWindow, 1);
@@ -104,6 +104,7 @@ int main()
   uint64_t lag = 0.0;
   uint64_t xscreenLag = 0.0;
 
+  int mouseMode = 0;
   int mouseX = 0;
   int mouseY = 0;
   int clickX = 0;
@@ -120,10 +121,11 @@ int main()
       break;
 
     // Mouse Cursor
-    if (e.type == MotionNotify && e.xbutton.button == 1)
+    if (e.type == MotionNotify && (e.xbutton.button == 1 || mouseMode == 1))
     {
-      deltaX = (mouseX = e.xmotion.x) - mouseX;
-      deltaY = (mouseY = e.xmotion.y) - mouseY;
+      XDefineCursor(display, window, None);
+      mouseX += (deltaX = e.xmotion.x - mouseX);
+      mouseX += (deltaY = e.xmotion.y - mouseY);
     }
     else if (e.type == ButtonPress && e.xbutton.button == 1)
     {
@@ -133,9 +135,12 @@ int main()
     else if (e.type == ButtonRelease && e.xbutton.button == 1 &&
              deltaY + deltaY == 0.0f)
     {
+      if (mouseMode != 1) XUndefineCursor(display, window);
       clickX = e.xmotion.x;
       clickY = e.xmotion.y;
     }
+
+    // Toggle Fullscreen
     else if (e.type == KeyPress && e.xkey.keycode == 13 &&
              e.xkey.state & Mod1Mask)
     {
@@ -169,6 +174,12 @@ int main()
     for (lag += timerDelta; lag >= 1.0 / 60.0; lag -= 1.0 / 60.0)
     {
     }
+
+    // Reset mouse vars
+    clickX = 0;
+    clickY = 0;
+    deltaX = 0;
+    deltaY = 0;
 
     // Render to G-Buffer
     glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
