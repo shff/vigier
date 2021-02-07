@@ -241,12 +241,12 @@ static OSStatus audioCallback(void *inRefCon,
 {
   if (![_window.contentView hitTest:[e locationInWindow]])
     [self toggleMouse:true];
-  else if (_mouseMode != 1)
-    return;
-
-  [self toggleMouse:false];
-  _deltaX += [e deltaX];
-  _deltaY += [e deltaY];
+  else if (_mouseMode == 1)
+  {
+    [self toggleMouse:false];
+    _deltaX += [e deltaX];
+    _deltaY += [e deltaY];
+  }
 }
 
 - (void)mouseUp:(NSEvent *)e
@@ -260,7 +260,8 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)mouseDragged:(NSEvent *)e
 {
-  if (_mouseMode != 2) return;
+  if (![_window.contentView hitTest:[e locationInWindow]] || _mouseMode != 2)
+    return;
 
   [self toggleMouse:false];
   _deltaX += [e deltaX];
