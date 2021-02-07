@@ -269,16 +269,10 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)toggleMouse:(bool)mode
 {
-  if (mode && !CGCursorIsVisible())
-  {
-    [NSCursor unhide];
-    CGAssociateMouseAndMouseCursorPosition(true);
-  }
-  else if (!mode && CGCursorIsVisible())
-  {
-    [NSCursor hide];
-    CGAssociateMouseAndMouseCursorPosition(false);
-  }
+  if (mode == CGCursorIsVisible()) return;
+
+  mode ? [NSCursor unhide] : [NSCursor hide];
+  CGAssociateMouseAndMouseCursorPosition(mode);
 }
 @end
 
