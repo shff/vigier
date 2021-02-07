@@ -245,11 +245,13 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)mouseUp:(NSEvent *)e
 {
-  if (_mouseMode == 2) [self toggleMouse:true];
-  if (![e clickCount]) return;
-
-  _clickX = [e locationInWindow].x;
-  _clickY = [e locationInWindow].x;
+  if (_mouseMode == 2)
+    [self toggleMouse:true];
+  else if ([e clickCount])
+  {
+    _clickX = [e locationInWindow].x;
+    _clickY = [e locationInWindow].x;
+  }
 }
 
 - (void)mouseDragged:(NSEvent *)e
