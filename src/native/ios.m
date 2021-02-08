@@ -47,8 +47,6 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLDevice> device;
 @property(nonatomic, assign) id<MTLCommandQueue> queue;
 @property(nonatomic, assign) CAMetalLayer *layer;
-@property(nonatomic, assign) MTLRenderPassDescriptor *pass1;
-@property(nonatomic, assign) MTLRenderPassDescriptor *pass2;
 @property(nonatomic, assign) id<MTLTexture> depthTexture;
 @property(nonatomic, assign) id<MTLTexture> albedoTexture;
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
@@ -96,21 +94,6 @@ static OSStatus audioCallback(void *inRefCon,
   _queue = [_device newCommandQueue];
   _layer = [[CAMetalLayer alloc] init];
   _layer.device = _device;
-
-  // Geometry Pass
-  _pass1 = [[MTLRenderPassDescriptor alloc] init];
-  _pass1.colorAttachments[0].loadAction = MTLLoadActionClear;
-  _pass1.colorAttachments[0].storeAction = MTLStoreActionStore;
-  _pass1.colorAttachments[0].clearColor = MTLClearColorMake(1, 0, 0, 1);
-  _pass1.depthAttachment.clearDepth = 1.0;
-  _pass1.depthAttachment.loadAction = MTLLoadActionClear;
-  _pass1.depthAttachment.storeAction = MTLStoreActionStore;
-
-  // Final Pass
-  _pass2 = [[MTLRenderPassDescriptor alloc] init];
-  _pass2.colorAttachments[0].loadAction = MTLLoadActionLoad;
-  _pass2.colorAttachments[0].storeAction = MTLStoreActionStore;
-  _pass2.depthAttachment.loadAction = MTLLoadActionLoad;
 
   // Final State
   id library = [_device newLibraryWithSource:shader options:nil error:NULL];
@@ -184,15 +167,31 @@ static OSStatus audioCallback(void *inRefCon,
 
     // Renderer
     id<CAMetalDrawable> drawable = [_layer nextDrawable];
-    _pass2.colorAttachments[0].texture = drawable.texture;
     id buffer = [_queue commandBuffer];
 
     // Geometry Pass
-    id encoder1 = [buffer renderCommandEncoderWithDescriptor:_pass1];
+    MTLRenderPassDescriptor *pass1 = [[MTLRenderPassDescriptor alloc] init];
+    pass1.colorAttachments[0].loadAction = MTLLoadActionClear;
+    pass1.colorAttachments[0].storeAction = MTLStoreActionStore;
+    pass1.colorAttachments[0].clearColor = MTLClearColorMake(1, 0, 0, 1);
+    pass1.colorAttachments[0].texture = _albedoTexture;
+    pass1.depthAttachment.clearDepth = 1.0;
+    pass1.depthAttachment.loadAction = MTLLoadActionClear;
+    pass1.depthAttachment.storeAction = MTLStoreActionStore;
+    pass1.depthAttachment.texture = _depthTexture;
+
+    // Final Pass
+    MTLRenderPassDescriptor *pass2 = [[MTLRenderPassDescriptor alloc] init];
+    pass2.colorAttachments[0].loadAction = MTLLoadActionLoad;
+    pass2.colorAttachments[0].storeAction = MTLStoreActionStore;
+    pass2.colorAttachments[0].texture = drawable.texture;
+    pass2.depthAttachment.loadAction = MTLLoadActionLoad;
+    pass2.depthAttachment.texture = _depthTexture;
+    id encoder1 = [buffer renderCommandEncoderWithDescriptor:pass1];
     [encoder1 endEncoding];
 
     // Final Pass
-    id encoder2 = [buffer renderCommandEncoderWithDescriptor:_pass2];
+    id encoder2 = [buffer renderCommandEncoderWithDescriptor:pass2];
     [encoder2 setRenderPipelineState:_quadState];
     [encoder2 setFragmentTexture:_albedoTexture atIndex:0];
     [encoder2 drawPrimitives:4 vertexStart:0 vertexCount:4];
@@ -234,13 +233,10 @@ static OSStatus audioCallback(void *inRefCon,
   // Depth/Stencil Texture
   desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
   _depthTexture = [_device newTextureWithDescriptor:desc];
-  _pass1.depthAttachment.texture = _depthTexture;
-  _pass2.depthAttachment.texture = _depthTexture;
 
   // Albedo Texture
   desc.pixelFormat = MTLPixelFormatRGBA8Unorm_sRGB;
   _albedoTexture = [_device newTextureWithDescriptor:desc];
-  _pass1.colorAttachments[0].texture = _albedoTexture;
 }
 @end
 
