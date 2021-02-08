@@ -210,7 +210,7 @@ static OSStatus audioCallback(void *inRefCon,
   }
 }
 
-- (void)onDrag:(UITapGestureRecognizer *)recognizer
+- (void)onDrag:(UIPanGestureRecognizer *)recognizer
 {
   if (_mouseMode != 0 && recognizer.state == UIGestureRecognizerStateRecognized)
   {

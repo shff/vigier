@@ -5,6 +5,7 @@ fn main() {
             .flag("-fmodules")
             .flag("-O3")
             .flag("-Wall")
+            .flag("-Werror")
             .flag("-pedantic")
             .flag("-Wno-deprecated-declarations")
             .flag("-mmacosx-version-min=10.10")
@@ -15,13 +16,14 @@ fn main() {
         cc::Build::new()
             .flag("-O3")
             .flag("-Wall")
-            .flag("-Wl,-s")
+            .flag("-Werror")
             .file("src/native/android.c")
             .compile("native.a");
     } else if target.contains("linux") {
         cc::Build::new()
             .flag("-O3")
             .flag("-Wall")
+            .flag("-Werror")
             .flag("-Wl,-s")
             .flag("-Wno-unused-parameter")
             .flag("-Wno-unused-but-set-variable")
@@ -37,6 +39,7 @@ fn main() {
             .flag("-fmodules")
             .flag("-O3")
             .flag("-Wall")
+            .flag("-Werror")
             .flag("-pedantic")
             .flag("-Wno-deprecated-declarations")
             .flag("-mios-simulator-version-min=13.0")
@@ -47,12 +50,15 @@ fn main() {
             .flag("-fmodules")
             .flag("-O3")
             .flag("-Wall")
+            .flag("-Werror")
             .flag("-pedantic")
             .flag("-Wno-deprecated-declarations")
             .file("src/native/ios.m")
             .compile("native.a");
     } else if target.contains("windows") {
         cc::Build::new()
+            .flag("-Wall")
+            .flag("-pedantic")
             .file("src/native/win32.c")
             .compile("native.a");
         println!("cargo:rustc-link-lib=user32");
@@ -62,8 +68,12 @@ fn main() {
         println!("cargo:rustc-link-lib=xinput");
     } else if target.contains("emscripten") {
         cc::Build::new()
-            .file("src/native/emsc.c")
+            .flag("-Wall")
+            .flag("-Werror")
+            .flag("-pedantic")
             .flag("-Wno-unused-parameter")
+            .flag("-Wno-gnu-zero-variadic-macro-arguments")
+            .file("src/native/emsc.c")
             .compile("native.a");
     }
 }

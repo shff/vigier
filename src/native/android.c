@@ -69,8 +69,10 @@ static void engine_handle_cmd(struct android_app *app, int32_t cmd)
     // Create Framebuffer
     glGenFramebuffers(1, &gbuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, backbuffer, 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthbuffer, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           backbuffer, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           depthbuffer, 0);
     glDrawBuffers(2, (GLenum[]){GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT});
 
     // OpenGL Configuration
@@ -119,6 +121,7 @@ static int32_t engine_handle_input(struct android_app *app, AInputEvent *e)
     prevX = AMotionEvent_getX(e, 0);
     prevY = AMotionEvent_getY(e, 0);
   }
+  return 0;
 }
 
 void android_main(struct android_app *app)
