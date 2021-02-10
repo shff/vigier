@@ -93,5 +93,6 @@ jobs:
             target/${{ matrix.platform.target }}/release/gen
             target/${{ matrix.platform.target }}/release/gen.exe
             target/${{ matrix.platform.target }}/release/gen.wasm
+            target/${{ matrix.platform.target }}/release/gen.js
             target/${{ matrix.platform.target }}/release/libgen.rlib
             target/${{ matrix.platform.target }}/release/gen.apk
