@@ -63,30 +63,30 @@ jobs:
         run: cargo build --release --lib --target ${{ matrix.platform.target }}
       - name: Build Binaries
         if: (!contains(matrix.platform.target, 'linux-android'))
-        run: cargo build --release --bin gen --target ${{ matrix.platform.target }}
+        run: cargo build --release --bin vigier --target ${{ matrix.platform.target }}
       - name: Build Android APK
         if: contains(matrix.platform.target, 'android')
         run: |
           echo '''<?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.gen">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.vigier">
             <uses-sdk android:minSdkVersion="21" />
             <application android:hasCode="false" android:debuggable="true">
               <activity android:name="android.app.NativeActivity" android:configChanges="keyboardHidden">
-                <meta-data android:name="android.app.lib_name" android:value="libgen" />
+                <meta-data android:name="android.app.lib_name" android:value="libvigier" />
               </activity>
             </application>
           </manifest>''' > ./AndroidManifest.xml && \
           mkdir -p ./lib/${{ matrix.platform.abi }} && \
-          cp ./target/${{ matrix.platform.target }}/release/deps/libgen.so ./lib/${{ matrix.platform.abi }} && \
-          /usr/local/lib/android/sdk/build-tools/30.0.3/aapt package -M ./AndroidManifest.xml -I /usr/local/lib/android/sdk/platforms/android-30/android.jar -F ./target/${{ matrix.platform.target }}/release/gen.apk && \
-          /usr/local/lib/android/sdk/build-tools/30.0.3/aapt add ./target/${{ matrix.platform.target }}/release/gen.apk ./lib/${{ matrix.platform.abi }}/libgen.so
+          cp ./target/${{ matrix.platform.target }}/release/deps/libvigier.so ./lib/${{ matrix.platform.abi }} && \
+          /usr/local/lib/android/sdk/build-tools/30.0.3/aapt package -M ./AndroidManifest.xml -I /usr/local/lib/android/sdk/platforms/android-30/android.jar -F ./target/${{ matrix.platform.target }}/release/vigier.apk && \
+          /usr/local/lib/android/sdk/build-tools/30.0.3/aapt add ./target/${{ matrix.platform.target }}/release/vigier.apk ./lib/${{ matrix.platform.abi }}/libvigier.so
       - uses: actions/upload-artifact@v2
         with:
-          name: gen-${{ matrix.platform.target }}
+          name: vigier-${{ matrix.platform.target }}
           path: |
-            target/${{ matrix.platform.target }}/release/gen
-            target/${{ matrix.platform.target }}/release/gen.exe
-            target/${{ matrix.platform.target }}/release/gen.wasm
-            target/${{ matrix.platform.target }}/release/gen.js
-            target/${{ matrix.platform.target }}/release/libgen.rlib
-            target/${{ matrix.platform.target }}/release/gen.apk
+            target/${{ matrix.platform.target }}/release/vigier
+            target/${{ matrix.platform.target }}/release/vigier.exe
+            target/${{ matrix.platform.target }}/release/vigier.wasm
+            target/${{ matrix.platform.target }}/release/vigier.js
+            target/${{ matrix.platform.target }}/release/libvigier.rlib
+            target/${{ matrix.platform.target }}/release/vigier.apk
