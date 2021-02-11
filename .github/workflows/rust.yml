@@ -36,7 +36,7 @@ jobs:
           - { os: windows, target: i686-pc-windows-msvc }
     runs-on: ${{ matrix.platform.os }}-latest
     env:
-      CFLAGS: -I/opt/android/ndk-bundle/sources/android/native_app_glue
+      CFLAGS: -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/android/native_app_glue
       CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER: aarch64-linux-android30-clang
       CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER: armv7a-linux-androideabi30-clang
       CARGO_TARGET_I686_LINUX_ANDROID_LINKER: i686-linux-android30-clang
@@ -58,13 +58,7 @@ jobs:
           echo "$(pwd)/upstream/emscripten" >> $GITHUB_PATH
       - name: Get NDK
         if: (contains(matrix.platform.target, 'linux-android'))
-        run: |
-          yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --sdk_root=/opt/android "build-tools;30.0.2" && \
-          yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --sdk_root=/opt/android "platforms;android-30" && \
-          yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --sdk_root=/opt/android tools && \
-          yes | /usr/local/lib/android/sdk/tools/bin/sdkmanager --sdk_root=/opt/android ndk-bundle && \
-          echo "/opt/android/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH &&
-          echo "/opt/android/build-tools/30.0.2" >> $GITHUB_PATH
+        run:   echo "/usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
       - name: Build Library
         run: cargo build --release --lib --target ${{ matrix.platform.target }}
       - name: Build Binaries
@@ -84,8 +78,8 @@ jobs:
           </manifest>''' > ./AndroidManifest.xml && \
           mkdir -p ./lib/${{ matrix.platform.abi }} && \
           cp ./target/${{ matrix.platform.target }}/release/deps/libgen.so ./lib/${{ matrix.platform.abi }} && \
-          aapt package -M ./AndroidManifest.xml -I /opt/android/platforms/android-30/android.jar -F ./target/${{ matrix.platform.target }}/release/gen.apk && \
-          aapt add ./target/${{ matrix.platform.target }}/release/gen.apk ./lib/${{ matrix.platform.abi }}/libgen.so
+          /usr/local/lib/android/sdk/build-tools/30.0.3/aapt package -M ./AndroidManifest.xml -I /usr/local/lib/android/sdk/platforms/android-30/android.jar -F ./target/${{ matrix.platform.target }}/release/gen.apk && \
+          /usr/local/lib/android/sdk/build-tools/30.0.3/aapt add ./target/${{ matrix.platform.target }}/release/gen.apk ./lib/${{ matrix.platform.abi }}/libgen.so
       - uses: actions/upload-artifact@v2
         with:
           name: gen-${{ matrix.platform.target }}
