@@ -36,8 +36,8 @@ int mouseCallback(int type, const EmscriptenMouseEvent *event, void *data)
 
 int resizeCallback(int type, const struct EmscriptenUiEvent *event, void *data)
 {
-  emscripten_get_element_css_size("#app", &w, &h);
-  emscripten_set_canvas_element_size("#app", w, h);
+  emscripten_get_element_css_size("#canvas", &w, &h);
+  emscripten_set_canvas_element_size("#canvas", w, h);
   return 0;
 }
 
@@ -69,13 +69,13 @@ int main(int argc, char *argv[])
   timerCurrent = EM_ASM_DOUBLE({return performance.now()});
 
   scale = emscripten_get_device_pixel_ratio();
-  emscripten_get_element_css_size("#app", &w, &h);
-  emscripten_set_canvas_element_size("#app", w, h);
+  emscripten_get_element_css_size("#canvas", &w, &h);
+  emscripten_set_canvas_element_size("#canvas", w, h);
 
   // Initialize OpenGL
   EmscriptenWebGLContextAttributes attrs;
   emscripten_webgl_init_context_attributes(&attrs);
-  int context = emscripten_webgl_create_context("#app", &attrs);
+  int context = emscripten_webgl_create_context("#canvas", &attrs);
   emscripten_webgl_make_context_current(context);
 
   // Create G-Buffer
@@ -106,14 +106,14 @@ int main(int argc, char *argv[])
                          backbuffer, 0);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
                          depthbuffer, 0);
-  glDrawBuffers(2, (GLenum[]){GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT});
+  // glDrawBuffers(2, (GLenum[]){GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT});
 
-  emscripten_set_mousedown_callback("#app", 0, true, mouseCallback);
-  emscripten_set_mouseup_callback("#app", 0, true, mouseCallback);
-  emscripten_set_mousemove_callback("#app", 0, true, mouseCallback);
-  emscripten_set_mouseenter_callback("#app", 0, true, mouseCallback);
-  emscripten_set_mouseleave_callback("#app", 0, true, mouseCallback);
-  emscripten_set_resize_callback("#app", 0, false, resizeCallback);
+  emscripten_set_mousedown_callback("#canvas", 0, true, mouseCallback);
+  emscripten_set_mouseup_callback("#canvas", 0, true, mouseCallback);
+  emscripten_set_mousemove_callback("#canvas", 0, true, mouseCallback);
+  emscripten_set_mouseenter_callback("#canvas", 0, true, mouseCallback);
+  emscripten_set_mouseleave_callback("#canvas", 0, true, mouseCallback);
+  emscripten_set_resize_callback("#canvas", 0, false, resizeCallback);
 
   emscripten_request_animation_frame_loop(drawFrame, 0);
 
