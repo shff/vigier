@@ -1,7 +1,12 @@
-#include <GL/glew.h>
 #include <GL/glx.h>
 #include <X11/Xlib.h>
 #include <alsa/asoundlib.h>
+
+void (*glGenFramebuffers)(GLsizei n, GLuint *framebuffers);
+void (*glBindFramebuffer)(GLenum target, GLuint framebuffer);
+void (*glBindFramebuffer)(GLenum target, GLuint framebuffer);
+void (*glFramebufferTexture)(GLenum target, GLenum attachment, GLuint texture, GLint level);
+void (*glDrawBuffers)(GLsizei n, const GLenum *bufs);
 
 int main()
 {
@@ -58,6 +63,13 @@ int main()
   snd_pcm_sw_params_set_avail_min(pcm_handle, sw_params, period_size);
   snd_pcm_sw_params_set_start_threshold(pcm_handle, sw_params, 1);
   snd_pcm_sw_params(pcm_handle, sw_params);
+
+  // Initialize OpenGL Extensions
+  glGenFramebuffers = (void*)glXGetProcAddressARB((const unsigned char*)"glGenFramebuffers");
+  glBindFramebuffer = (void*)glXGetProcAddressARB((const unsigned char*)"glBindFramebuffer");
+  glBindFramebuffer = (void*)glXGetProcAddressARB((const unsigned char*)"glBindFramebuffer");
+  glFramebufferTexture = (void*)glXGetProcAddressARB((const unsigned char*)"glFramebufferTexture");
+  glDrawBuffers = (void*)glXGetProcAddressARB((const unsigned char*)"glDrawBuffers");
 
   // Initialize OpenGL
   int att[] = {GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None};
