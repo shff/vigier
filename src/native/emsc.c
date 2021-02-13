@@ -79,6 +79,22 @@ int main(int argc, char *argv[])
   emscripten_get_element_css_size("#canvas", &w, &h);
   emscripten_set_canvas_element_size("#canvas", w, h);
 
+  // Initialize Audio
+  EM_ASM({
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    var context = new AudioContext({ sampleRate: 44100 });
+    var node = context.createScriptProcessor(2048, 0, 2);
+    node.onaudioprocess = (e) => {
+      for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
+        let channel = e.outputBuffer.getChannelData(i);
+        for (let j = 0; j < e.outputBuffer.length; j++) {
+          channel[j] = 0;
+        }
+      }
+    };
+    node.connect(context.destination);
+  });
+
   // Initialize OpenGL
   EmscriptenWebGLContextAttributes attrs;
   emscripten_webgl_init_context_attributes(&attrs);
