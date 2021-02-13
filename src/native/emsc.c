@@ -3,8 +3,6 @@
 #include <emscripten/html5.h>
 #include <webgpu/webgpu.h>
 
-int glDrawBuffers(GLsizei n, const GLenum *bufs);
-
 unsigned int backbuffer, depthbuffer, gbuffer, mouseMode = 2;
 double timerCurrent = 0, lag = 0, w = 0, h = 0;
 float scale, clickX = 0.0f, clickY = 0.0f, deltaX = 0.0f, deltaY = 0.0f;
@@ -34,6 +32,14 @@ int resizeCallback(int type, const struct EmscriptenUiEvent *event, void *data)
 {
   emscripten_get_element_css_size("#canvas", &w, &h);
   emscripten_set_canvas_element_size("#canvas", w, h);
+
+  // Resize Textures
+  glBindTexture(GL_TEXTURE_2D, backbuffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_FLOAT, 0);
+  glBindTexture(GL_TEXTURE_2D, depthbuffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0,
+               GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
   return 0;
 }
 
@@ -82,7 +88,7 @@ int main(int argc, char *argv[])
   // Create G-Buffer
   glGenTextures(1, &backbuffer);
   glBindTexture(GL_TEXTURE_2D, backbuffer);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -92,7 +98,7 @@ int main(int argc, char *argv[])
   // Create Z-Buffer
   glGenTextures(1, &depthbuffer);
   glBindTexture(GL_TEXTURE_2D, depthbuffer);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 800, 600, 0,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, w, h, 0,
                GL_DEPTH_COMPONENT, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -114,8 +120,7 @@ int main(int argc, char *argv[])
   emscripten_set_mousemove_callback("#canvas", 0, true, mouseCallback);
   emscripten_set_mouseenter_callback("#canvas", 0, true, mouseCallback);
   emscripten_set_mouseleave_callback("#canvas", 0, true, mouseCallback);
-  emscripten_set_resize_callback("#canvas", 0, false, resizeCallback);
-
+  emscripten_set_resize_callback("#canvas", 0, true, resizeCallback);
   emscripten_request_animation_frame_loop(drawFrame, 0);
 
   return 0;
