@@ -5,18 +5,17 @@
 
 int glDrawBuffers(GLsizei n, const GLenum *bufs);
 
-unsigned int backbuffer, depthbuffer, gbuffer, mouseMode = 0;
+unsigned int backbuffer, depthbuffer, gbuffer, mouseMode = 2;
 double timerCurrent = 0, lag = 0, w = 0, h = 0;
-float scale, clickX, clickY, mouseX, mouseY, deltaX = 0.0f, deltaY = 0.0f;
+float scale, clickX = 0.0f, clickY = 0.0f, deltaX = 0.0f, deltaY = 0.0f;
 
 int mouseCallback(int type, const EmscriptenMouseEvent *event, void *data)
 {
-  if (type == EMSCRIPTEN_EVENT_MOUSEDOWN && event->button == 0)
+  if (type == EMSCRIPTEN_EVENT_MOUSEDOWN && event->button == 0 && mouseMode)
   {
-    mouseX = event->targetX * scale;
-    mouseY = event->targetY * scale;
+    EM_ASM(document.querySelector("canvas").requestPointerLock());
   }
-  if (type == EMSCRIPTEN_EVENT_MOUSEUP && event->button == 0)
+  if (type == EMSCRIPTEN_EVENT_MOUSEUP && event->button == 0 && mouseMode != 1)
   {
     EM_ASM(document.exitPointerLock());
     clickX = event->targetX * scale;
@@ -24,11 +23,8 @@ int mouseCallback(int type, const EmscriptenMouseEvent *event, void *data)
   }
   if (type == EMSCRIPTEN_EVENT_MOUSEMOVE && event->buttons == mouseMode - 1)
   {
-    EM_ASM(Module['canvas'].requestPointerLock());
-    deltaX = event->targetX * scale - mouseX;
-    deltaY = event->targetY * scale - mouseY;
-    mouseX = event->targetX * scale;
-    mouseY = event->targetY * scale;
+    deltaX = event->movementX;
+    deltaY = event->movementY;
   }
 
   return 1;
@@ -52,6 +48,11 @@ int drawFrame()
   for (lag += timerDelta; lag >= 1.0 / 60.0; lag -= 1.0 / 60.0)
   {
   }
+
+  clickX = 0.0f;
+  clickY = 0.0f;
+  deltaX = 0.0f;
+  deltaY = 0.0f;
 
   // Render to G-Buffer
   glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);

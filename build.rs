@@ -72,6 +72,7 @@ fn main() {
             .flag("-pedantic")
             .flag("-Wno-unused-parameter")
             .flag("-Wno-gnu-zero-variadic-macro-arguments")
+            .flag("-Wno-dollar-in-identifier-extension")
             .file("src/native/emsc.c")
             .compile("native.a");
     }
