@@ -65,15 +65,5 @@ fn main() {
         println!("cargo:rustc-link-lib=dxguid");
         println!("cargo:rustc-link-lib=dsound");
         println!("cargo:rustc-link-lib=xinput");
-    } else if target.contains("emscripten") {
-        cc::Build::new()
-            .flag("-Wall")
-            .flag("-Werror")
-            .flag("-pedantic")
-            .flag("-Wno-unused-parameter")
-            .flag("-Wno-gnu-zero-variadic-macro-arguments")
-            .flag("-Wno-dollar-in-identifier-extension")
-            .file("src/native/emsc.c")
-            .compile("native.a");
     }
 }

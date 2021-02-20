@@ -27,7 +27,7 @@ jobs:
           - { os: macos, target: aarch64-apple-ios }
           - { os: ubuntu, target: i686-unknown-linux-gnu }
           - { os: ubuntu, target: x86_64-unknown-linux-gnu }
-          - { os: ubuntu, target: wasm32-unknown-emscripten }
+          - { os: ubuntu, target: wasm32-unknown-unknown }
           - { os: ubuntu, target: i686-linux-android, abi: x86 }
           - { os: ubuntu, target: x86_64-linux-android, abi: x86_64 }
           - { os: ubuntu, target: armv7-linux-androideabi, abi: armeabi-v7a }
@@ -48,17 +48,9 @@ jobs:
       - name: Apt
         if: (contains(matrix.platform.target, 'linux-gnu'))
         run: sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install libc6-dev libc6-dev-i386 mesa-common-dev libgl1-mesa-dev libgl1 mesa-common-dev:i386 libgl1-mesa-dev:i386 libgl1:i386 libasound2-dev libasound2-dev:i386
-      - name: Emscripten
-        if: (matrix.platform.target == 'wasm32-unknown-emscripten')
-        run: |
-          git clone https://github.com/emscripten-core/emsdk.git && \
-          cd emsdk && \
-          ./emsdk install 2.0.9 && \
-          ./emsdk activate 2.0.9 && \
-          echo "$(pwd)/upstream/emscripten" >> $GITHUB_PATH
       - name: Get NDK
         if: (contains(matrix.platform.target, 'linux-android'))
-        run:   echo "/usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+        run: echo "/usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
       - name: Build Library
         run: cargo build --release --lib --target ${{ matrix.platform.target }}
       - name: Build Binaries

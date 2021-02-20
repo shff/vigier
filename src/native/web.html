@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vigier</title>
+    <style>
+      html, body, #app { margin: 0; padding: 0; height: 100%; width: 100%; }
+    </style>
+  </head>
+  <body>
+    <canvas id="app"></canvas>
+    <script>
+      window.AudioContext = window.AudioContext || window.webkitAudioContext;
+
+      (async function() {
+        // Initialize Library
+        const response = await fetch("vigier.wasm");
+        const bytes = await response.arrayBuffer();
+        const { instance } = await WebAssembly.instantiate(bytes, {});
+
+        // Initialize Audio
+        const audio = new AudioContext({ sampleRate: 44100 });
+        const node = audio.createScriptProcessor(2048, 0, 2);
+        node.connect(audio.destination);
+
+        // Initialize WebGL
+        const canvas = document.getElementById("app");
+        const gl = canvas.getContext("webgl");
+        gl.getExtension("WEBGL_depth_texture")
+
+        // Initialize G-Buffer
+        const backbuffer = gl.createTexture();
+        const depthbuffer = gl.createTexture();
+        const gbuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, gbuffer);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, backbuffer, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, depthbuffer, 0);
+
+        // Initialize Timer
+        let timerCurrent = performance.now(), lag = 0;
+        let mouseMode = 2, clickX = 0, clickY = 0, deltaX = 0, deltaY = 0;
+
+        // Events
+        canvas.addEventListener("mousedown", (e) => {
+          if (mouseMode && e.button === 0) canvas.requestPointerLock()
+        });
+        canvas.addEventListener("mouseup", (e) => {
+          if (e.button !== 0 || mouseMode === 1) return;
+          document.exitPointerLock();
+          clickX = e.offsetX * devicePixelRatio;
+          clickY = e.offsetY * devicePixelRatio;
+        });
+        canvas.addEventListener("mousemove", (e) => {
+          if (e.buttons !== mouseMode - 1) return;
+          deltaX = e.movementX;
+          deltaY = e.movementY;
+        });
+        node.addEventListener("audioprocess", (e) => {
+          for (let i = 0; i < e.outputBuffer.numberOfChannels; i++) {
+            let channel = e.outputBuffer.getChannelData(i);
+            for (let j = 0; j < e.outputBuffer.length; j++) {
+              channel[j] = 0;
+            }
+          }
+        });
+
+        // Initialize
+        resizeBuffers();
+        window.addEventListener("resize", resizeBuffers);
+
+        function resizeBuffers() {
+          const { width: w, height: h } = canvas.getBoundingClientRect();
+
+          gl.bindTexture(gl.TEXTURE_2D, backbuffer);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+          gl.bindTexture(gl.TEXTURE_2D, depthbuffer);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, w, h, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_BYTE, null);
+        }
+
+        requestAnimationFrame(function render() {
+          // Update Timer
+          const timerNext = performance.now();
+          const timerDelta = (timerNext - timerCurrent) / 1000;
+          timerCurrent = timerNext;
+
+          // Fixed updates
+          for (lag += timerDelta; lag >= 1 / 60; lag -= 1 / 60)
+          {
+          }
+
+          // Reset mouse
+          clickX = 0, clickY = 0, deltaX = 0, deltaY = 0;
+
+          // Render
+          gl.bindFramebuffer(gl.FRAMEBUFFER, gbuffer);
+          gl.clearColor(1, 0, 0, 1);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          gl.clearColor(1, Math.sin(timerCurrent % 10000 / 2000), 0, 1);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+          requestAnimationFrame(render);
+        });
+      })();
+    </script>
+  </body>
+</html>
