@@ -207,13 +207,13 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (id<MTLRenderPipelineState>)createState:(NSString *)shader
 {
-    id library = [_device newLibraryWithSource:shader options:nil error:NULL];
-    MTLRenderPipelineDescriptor *desc = [MTLRenderPipelineDescriptor new];
-    desc.vertexFunction = [library newFunctionWithName:@"v_simple"];
-    desc.fragmentFunction = [library newFunctionWithName:@"f_simple"];
-    desc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
-    desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
-    return [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
+  id library = [_device newLibraryWithSource:shader options:nil error:NULL];
+  MTLRenderPipelineDescriptor *desc = [MTLRenderPipelineDescriptor new];
+  desc.vertexFunction = [library newFunctionWithName:@"v_simple"];
+  desc.fragmentFunction = [library newFunctionWithName:@"f_simple"];
+  desc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+  desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
+  return [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
 }
 
 - (void)createBuffers
