@@ -11,3 +11,6 @@ cc = "1.0"
 
 [lib]
 crate-type = ["lib", "cdylib"]
+
+[profile.release]
+lto = true
