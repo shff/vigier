@@ -51,10 +51,13 @@ jobs:
       - name: Get NDK
         if: (contains(matrix.platform.target, 'linux-android'))
         run: echo "/usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+      - name: Disable lib for Android and WASM
+        if: contains(matrix.platform.target, 'linux-android') || contains(matrix.platform.target, 'wasm32')
+        run: sed -i 's/\"lib\",\ //g' Cargo.toml
       - name: Build Library
         run: cargo build --release --lib --target ${{ matrix.platform.target }}
       - name: Build Binaries
-        if: (!contains(matrix.platform.target, 'linux-android'))
+        if: (!contains(matrix.platform.target, 'linux-android') && !contains(matrix.platform.target, 'wasm32'))
         run: cargo build --release --bin demo --target ${{ matrix.platform.target }}
       - name: Build Android APK
         if: contains(matrix.platform.target, 'android')
@@ -76,9 +79,7 @@ jobs:
         with:
           name: vigier-${{ matrix.platform.target }}
           path: |
-            target/${{ matrix.platform.target }}/release/vigier
-            target/${{ matrix.platform.target }}/release/vigier.exe
+            target/${{ matrix.platform.target }}/release/demo
+            target/${{ matrix.platform.target }}/release/demo.exe
             target/${{ matrix.platform.target }}/release/vigier.wasm
-            target/${{ matrix.platform.target }}/release/vigier.js
-            target/${{ matrix.platform.target }}/release/libvigier.rlib
             target/${{ matrix.platform.target }}/release/vigier.apk
