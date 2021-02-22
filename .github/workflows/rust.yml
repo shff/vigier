@@ -3,20 +3,6 @@ name: Rust
 on: [push]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Apt
-        run: sudo apt-get update && sudo apt-get install libc6-dev mesa-common-dev libgl1-mesa-dev libgl1 libasound2-dev
-      - name: Get Tarpaulin
-        run: curl -L https://github.com/xd009642/tarpaulin/releases/download/0.16.0/cargo-tarpaulin-0.16.0-travis.tar.gz | tar zxv -C /usr/share/rust/.cargo/bin
-      - name: Format
-        run: cargo fmt -- --check
-      - name: Lint
-        run: cargo clippy -- -D warnings -D clippy::all -D clippy::nursery
-
   e2e:
     strategy:
       fail-fast: false
@@ -35,51 +21,22 @@ jobs:
           - { os: windows, target: x86_64-pc-windows-msvc }
           - { os: windows, target: i686-pc-windows-msvc }
     runs-on: ${{ matrix.platform.os }}-latest
-    env:
-      CFLAGS: -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/android/native_app_glue
-      CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER: aarch64-linux-android30-clang
-      CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER: armv7a-linux-androideabi30-clang
-      CARGO_TARGET_I686_LINUX_ANDROID_LINKER: i686-linux-android30-clang
-      CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER: x86_64-linux-android30-clang
     steps:
       - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: (contains(matrix.platform.target, 'windows-msvc'))
       - name: Rustup
         run: rustup target add ${{ matrix.platform.target }}
       - name: Apt
         if: (contains(matrix.platform.target, 'linux-gnu'))
         run: sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install libc6-dev libc6-dev-i386 mesa-common-dev libgl1-mesa-dev libgl1 mesa-common-dev:i386 libgl1-mesa-dev:i386 libgl1:i386 libasound2-dev libasound2-dev:i386
-      - name: Get NDK
-        if: (contains(matrix.platform.target, 'linux-android'))
-        run: echo "/usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
-      - name: Disable lib for Android and WASM
-        if: contains(matrix.platform.target, 'linux-android') || contains(matrix.platform.target, 'wasm32')
-        run: sed -i 's/\"lib\",\ //g' Cargo.toml
-      - name: Build Library
-        run: cargo build --release --lib --target ${{ matrix.platform.target }}
-      - name: Build Binaries
-        if: (!contains(matrix.platform.target, 'linux-android') && !contains(matrix.platform.target, 'wasm32'))
-        run: cargo build --release --bin vigier --target ${{ matrix.platform.target }}
-      - name: Build Android APK
-        if: contains(matrix.platform.target, 'android')
-        run: |
-          echo '''<?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.vigier">
-            <uses-sdk android:minSdkVersion="21" />
-            <application android:hasCode="false" android:debuggable="true">
-              <activity android:name="android.app.NativeActivity" android:configChanges="keyboardHidden">
-                <meta-data android:name="android.app.lib_name" android:value="libvigier" />
-              </activity>
-            </application>
-          </manifest>''' > ./AndroidManifest.xml && \
-          mkdir -p ./lib/${{ matrix.platform.abi }} && \
-          cp ./target/${{ matrix.platform.target }}/release/deps/libvigier.so ./lib/${{ matrix.platform.abi }} && \
-          /usr/local/lib/android/sdk/build-tools/30.0.3/aapt package -M ./AndroidManifest.xml -I /usr/local/lib/android/sdk/platforms/android-30/android.jar -F ./target/${{ matrix.platform.target }}/release/vigier.apk && \
-          /usr/local/lib/android/sdk/build-tools/30.0.3/aapt add ./target/${{ matrix.platform.target }}/release/vigier.apk ./lib/${{ matrix.platform.abi }}/libvigier.so
+      - name: Install
+        run: cargo install --path .
+      - name: Run it
+        run: cargo appify --release --target ${{ matrix.platform.target }} --verbose
       - uses: actions/upload-artifact@v2
         with:
           name: vigier-${{ matrix.platform.target }}
           path: |
-            target/${{ matrix.platform.target }}/release/demo
-            target/${{ matrix.platform.target }}/release/demo.exe
-            target/${{ matrix.platform.target }}/release/vigier.wasm
-            target/${{ matrix.platform.target }}/release/vigier.apk
+            target/${{ matrix.platform.target }}/release/App
+            target/${{ matrix.platform.target }}/release/App.app

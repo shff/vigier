@@ -67,15 +67,15 @@ int main()
 
   // Initialize OpenGL Extensions
   glGenFramebuffers =
-      (void *)glXGetProcAddressARB((const unsigned char *)"glGenFramebuffers");
+      (void (*)())glXGetProcAddressARB((const unsigned char *)"glGenFramebuffers");
   glBindFramebuffer =
-      (void *)glXGetProcAddressARB((const unsigned char *)"glBindFramebuffer");
+      (void (*)())glXGetProcAddressARB((const unsigned char *)"glBindFramebuffer");
   glBindFramebuffer =
-      (void *)glXGetProcAddressARB((const unsigned char *)"glBindFramebuffer");
-  glFramebufferTexture = (void *)glXGetProcAddressARB(
+      (void (*)())glXGetProcAddressARB((const unsigned char *)"glBindFramebuffer");
+  glFramebufferTexture = (void (*)())glXGetProcAddressARB(
       (const unsigned char *)"glFramebufferTexture");
   glDrawBuffers =
-      (void *)glXGetProcAddressARB((const unsigned char *)"glDrawBuffers");
+      (void (*)())glXGetProcAddressARB((const unsigned char *)"glDrawBuffers");
 
   // Initialize OpenGL
   int att[] = {GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None};
@@ -214,6 +214,9 @@ int main()
     clickY = 0;
     deltaX = 0;
     deltaY = 0;
+
+    (void)clickX;
+    (void)clickY;
 
     // Render to G-Buffer
     glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);

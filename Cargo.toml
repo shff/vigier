@@ -1,17 +1,5 @@
 [package]
-name = "vigier"
+name = "cargo-appify"
 version = "0.1.0"
 authors = ["Silvio Henrique Ferreira <shferreira@me.com>"]
-license = "MIT"
-description = "Lightweight game library"
 edition = "2018"
-
-[build-dependencies]
-cc = "1.0"
-
-[lib]
-crate-type = ["lib", "cdylib"]
-
-[profile.release]
-lto = true
-opt-level = 's'
