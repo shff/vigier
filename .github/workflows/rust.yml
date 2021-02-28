@@ -58,7 +58,7 @@ jobs:
         run: cargo build --release --lib --target ${{ matrix.platform.target }}
       - name: Build Binaries
         if: (!contains(matrix.platform.target, 'linux-android') && !contains(matrix.platform.target, 'wasm32'))
-        run: cargo build --release --bin demo --target ${{ matrix.platform.target }}
+        run: cargo build --release --bin vigier --target ${{ matrix.platform.target }}
       - name: Build Android APK
         if: contains(matrix.platform.target, 'android')
         run: |
