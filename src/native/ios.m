@@ -125,11 +125,11 @@ static OSStatus audioCallback(void *inRefCon,
   [_mainWindow.rootViewController.view
       addGestureRecognizer:[[UITapGestureRecognizer alloc]
                                initWithTarget:self
-                                       action:@selector(onTap)]];
+                                       action:@selector(onTap:)]];
   [_mainWindow.rootViewController.view
       addGestureRecognizer:[[UIPanGestureRecognizer alloc]
                                initWithTarget:self
-                                       action:@selector(onDrag)]];
+                                       action:@selector(onDrag:)]];
 
   // Re-create buffers when rotating the device
   [self createBuffers];
