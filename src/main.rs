@@ -292,7 +292,9 @@ fn main() {
         }
 
         // Execute
-        if run {}
+        if run {
+            Command::new(output).status().expect("Can't run program");
+        }
     }
 
     //
@@ -319,7 +321,9 @@ fn main() {
         }
 
         // Execute
-        if run {}
+        if run {
+            Command::new(output).status().expect("Can't run program");
+        }
     }
 }
 
