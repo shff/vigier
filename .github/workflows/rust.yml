@@ -3,40 +3,43 @@ name: Rust
 on: [push]
 
 jobs:
-  e2e:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - { os: macos, target: x86_64-apple-darwin }
-          - { os: macos, target: x86_64-apple-ios }
-          - { os: macos, target: aarch64-apple-ios }
-          - { os: ubuntu, target: i686-unknown-linux-gnu }
-          - { os: ubuntu, target: x86_64-unknown-linux-gnu }
-          - { os: ubuntu, target: wasm32-unknown-unknown }
-          - { os: ubuntu, target: i686-linux-android, abi: x86 }
-          - { os: ubuntu, target: x86_64-linux-android, abi: x86_64 }
-          - { os: ubuntu, target: armv7-linux-androideabi, abi: armeabi-v7a }
-          - { os: ubuntu, target: aarch64-linux-android, abi: arm64-v8a }
-          - { os: windows, target: x86_64-pc-windows-msvc }
-          - { os: windows, target: i686-pc-windows-msvc }
-    runs-on: ${{ matrix.platform.os }}-latest
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup target add x86_64-apple-ios aarch64-apple-ios
+      - run: cargo install --path .
+      - run : cargo appify macos --release
+      - run : cargo appify ios --release
+      - uses: actions/upload-artifact@v2
+        with:
+          name: vigier-macos
+          path: |
+            target/ios/App.app
+            target/macos/App.app
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup target add i686-unknown-linux-gnu x86_64-unknown-linux-gnu wasm32-unknown-unknown i686-linux-android x86_64-linux-android armv7-linux-androideabi aarch64-linux-android
+      - run: sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install libc6-dev libc6-dev-i386 mesa-common-dev libgl1-mesa-dev libgl1 mesa-common-dev:i386 libgl1-mesa-dev:i386 libgl1:i386 libasound2-dev libasound2-dev:i386
+      - run: cargo install --path .
+      - run: cargo appify x11 --release
+      - run: cargo appify android --release
+      - uses: actions/upload-artifact@v2
+        with:
+          name: vigier-linux
+          path: |
+            target/android/App
+            target/x11/App
+  windows:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
-        if: (contains(matrix.platform.target, 'windows-msvc'))
-      - name: Rustup
-        run: rustup target add ${{ matrix.platform.target }}
-      - name: Apt
-        if: (contains(matrix.platform.target, 'linux-gnu'))
-        run: sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install libc6-dev libc6-dev-i386 mesa-common-dev libgl1-mesa-dev libgl1 mesa-common-dev:i386 libgl1-mesa-dev:i386 libgl1:i386 libasound2-dev libasound2-dev:i386
-      - name: Install
-        run: cargo install --path .
-      - name: Run it
-        run: cargo appify --release --target ${{ matrix.platform.target }} --verbose
+      - run: cargo install --path .
+      - run: cargo appify win --release
       - uses: actions/upload-artifact@v2
         with:
-          name: vigier-${{ matrix.platform.target }}
-          path: |
-            target/${{ matrix.platform.target }}/release/App
-            target/${{ matrix.platform.target }}/release/App.app
+          name: vigier-win32
+          path: target/win/App.exe

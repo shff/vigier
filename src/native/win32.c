@@ -3,6 +3,12 @@
 #include <windows.h>
 #include <xinput.h>
 
+#pragma comment(lib, "user32")
+#pragma comment(lib, "d3d11")
+#pragma comment(lib, "dxguid")
+#pragma comment(lib, "dsound")
+#pragma comment(lib, "xinput")
+
 unsigned int mouseMode = 0;
 float mouseX, mouseY, clickX, clickY, deltaX, deltaY;
 WINDOWPLACEMENT placement = {0};
@@ -20,7 +26,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam,
     if (mouseMode != 1)
     {
       ClipCursor(NULL);
-      SetCursor(LoadCursorW(NULL, IDC_ARROW));
+      SetCursor(LoadCursorW(NULL, (LPCWSTR)IDC_ARROW));
     }
     clickX = LOWORD(lParam);
     clickY = HIWORD(lParam);
@@ -161,7 +167,7 @@ int main(int argc, char const *argv[])
       .ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D,
   };
   ID3D11Texture2D *zBufferTex = NULL;
-  ID3D11RenderTargetView *zBuffer = NULL;
+  ID3D11DepthStencilView *zBuffer = NULL;
   dev->lpVtbl->CreateTexture2D(dev, &zBufferTexDesc, NULL, &zBufferTex);
   dev->lpVtbl->CreateDepthStencilView(dev, (ID3D11Resource *)zBufferTex,
                                       &zBufferDesc, &zBuffer);
@@ -169,16 +175,17 @@ int main(int argc, char const *argv[])
   // Create the Backbuffer
   ID3D11Texture2D *bufferTex = NULL;
   ID3D11RenderTargetView *buffer = NULL;
-  swapchain->lpVtbl->GetBuffer(swapchain, 0, &IID_ID3D11Texture2D, &bufferTex);
+  swapchain->lpVtbl->GetBuffer(swapchain, 0, &IID_ID3D11Texture2D,
+                               (void **)&bufferTex);
   dev->lpVtbl->CreateRenderTargetView(dev, (ID3D11Resource *)bufferTex, NULL,
                                       &buffer);
 
   // Start the Timer
   long long timerResolution;
   long long timerCurrent;
-  QueryPerformanceFrequency(&timerResolution);
-  QueryPerformanceCounter(&timerCurrent);
-  long long lag = 0.0;
+  QueryPerformanceFrequency((LARGE_INTEGER *)&timerResolution);
+  QueryPerformanceCounter((LARGE_INTEGER *)&timerCurrent);
+  double lag = 0;
 
   // Reset Deltas
   mouseX = 0.0f;
@@ -207,8 +214,8 @@ int main(int argc, char const *argv[])
 
     // Update Timer
     long long timerNext;
-    QueryPerformanceCounter(&timerNext);
-    long long timerDelta = (timerNext - timerCurrent) * 10E8 / timerResolution;
+    QueryPerformanceCounter((LARGE_INTEGER *)&timerNext);
+    double timerDelta = (timerNext - timerCurrent) * 10E8 / timerResolution;
     timerCurrent = timerNext;
 
     // Fixed updates
@@ -229,14 +236,14 @@ int main(int argc, char const *argv[])
     float blankColor[4] = {0.0f, 0.2f, 0.4f, 1.0f};
 
     // Geometry Pass
-    context->lpVtbl->OMSetRenderTargets(context, 1, &gBuffer, &zBuffer);
+    context->lpVtbl->OMSetRenderTargets(context, 1, &gBuffer, zBuffer);
     context->lpVtbl->RSSetViewports(context, 1, &viewport);
     context->lpVtbl->ClearRenderTargetView(context, gBuffer, blankColor);
     context->lpVtbl->ClearDepthStencilView(context, zBuffer, D3D11_CLEAR_DEPTH,
                                            1.0f, 0);
 
     // Final Pass
-    context->lpVtbl->OMSetRenderTargets(context, 1, &buffer, &zBuffer);
+    context->lpVtbl->OMSetRenderTargets(context, 1, &buffer, zBuffer);
     context->lpVtbl->RSSetViewports(context, 1, &viewport);
     swapchain->lpVtbl->Present(swapchain, 0, 0);
   }

@@ -66,12 +66,12 @@ int main()
   snd_pcm_sw_params(pcm_handle, sw_params);
 
   // Initialize OpenGL Extensions
-  glGenFramebuffers =
-      (void (*)())glXGetProcAddressARB((const unsigned char *)"glGenFramebuffers");
-  glBindFramebuffer =
-      (void (*)())glXGetProcAddressARB((const unsigned char *)"glBindFramebuffer");
-  glBindFramebuffer =
-      (void (*)())glXGetProcAddressARB((const unsigned char *)"glBindFramebuffer");
+  glGenFramebuffers = (void (*)())glXGetProcAddressARB(
+      (const unsigned char *)"glGenFramebuffers");
+  glBindFramebuffer = (void (*)())glXGetProcAddressARB(
+      (const unsigned char *)"glBindFramebuffer");
+  glBindFramebuffer = (void (*)())glXGetProcAddressARB(
+      (const unsigned char *)"glBindFramebuffer");
   glFramebufferTexture = (void (*)())glXGetProcAddressARB(
       (const unsigned char *)"glFramebufferTexture");
   glDrawBuffers =
