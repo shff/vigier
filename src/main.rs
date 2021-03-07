@@ -13,6 +13,7 @@ fn main() {
 
     let mut run = false;
     let mut mode = "debug";
+    let mut simulator = "iPhone SE (2nd generation)".to_string();
     let mut target = env::var("RUSTUP_TOOLCHAIN")
         .ok()
         .map(|toolchain| toolchain.splitn(2, '-').skip(1).collect());
@@ -24,6 +25,7 @@ fn main() {
             "run" => run = true,
             "--release" => mode = "release",
             "--target" => target = args.next(),
+            "--simulator" => simulator = args.next().expect("Simulator name expected"),
             "-h" | "--help" => {
                 println!("{} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
                 return;
@@ -111,7 +113,7 @@ fn main() {
             format!("Add :CFBundleDisplayName string \"{}\"", app_name),
             format!("Add :CFBundleIdentifier string \"vigier.{}\"", app_name),
         ];
-        write_plist(plist, plist_keys);
+        write_plist(plist.clone(), plist_keys);
 
         // Write Wrapper to Disk
         let wrapper = include_str!("native/macos.m");
@@ -160,6 +162,7 @@ fn main() {
         // Define Paths
         let bundle = out_dir.join(format!("{}.app", app_name));
         let output = bundle.join(app_name);
+        let unique_id = format!("io.github.shff.ge.{}", app_name);
 
         // Create Bundle
         create_dir(bundle.clone()).ok();
@@ -168,19 +171,19 @@ fn main() {
         let plist = bundle.join("Info.plist");
         remove_file(plist.clone()).ok();
         let plist_keys = vec![
-            format!("Add :CFBundleDevelopmentRegion -string \"{}\"", "en"),
-            format!("Add :CFBundleDisplayName -string \"{}\"", app_name),
-            format!("Add :CFBundleExecutable -string \"{}\"", app_name),
-            format!("Add :CFBundleIdentifier -string \"{}\"", app_name),
-            format!("Add :CFBundleInfoDictionaryVersion -string \"6.0\""),
-            format!("Add :CFBundleName -string \"{}\"", app_name),
-            format!("Add :CFBundlePackageType -string \"APPL\""),
-            format!("Add :CFBundleShortVersionString -string \"1.0.0\""),
-            format!("Add :CFBundleSignature -string \"????\""),
-            format!("Add :CFBundleVersion -string \"1\""),
-            format!("Add :LSRequiresIPhoneOS -bool \"true\""),
-            format!("Add :UISupportedInterfaceOrientations.0 -string UIInterfaceOrientationLandscapeLeft"),
-            format!("Add :UISupportedInterfaceOrientations.1 -string UIInterfaceOrientationLandscapeRight)")
+            format!("Add :CFBundleDevelopmentRegion string \"{}\"", "en"),
+            format!("Add :CFBundleDisplayName string \"{}\"", app_name),
+            format!("Add :CFBundleExecutable string \"{}\"", app_name),
+            format!("Add :CFBundleIdentifier string \"{}\"", unique_id),
+            format!("Add :CFBundleInfoDictionaryVersion string \"6.0\""),
+            format!("Add :CFBundleName string \"{}\"", app_name),
+            format!("Add :CFBundlePackageType string \"APPL\""),
+            format!("Add :CFBundleShortVersionString string \"1.0.0\""),
+            format!("Add :CFBundleSignature string \"????\""),
+            format!("Add :CFBundleVersion string \"1\""),
+            format!("Add :LSRequiresIPhoneOS bool \"true\""),
+            format!("Add :UISupportedInterfaceOrientations.0 string UIInterfaceOrientationLandscapeLeft"),
+            format!("Add :UISupportedInterfaceOrientations.1 string UIInterfaceOrientationLandscapeRight)")
         ];
         write_plist(plist, plist_keys);
 
@@ -227,9 +230,26 @@ fn main() {
 
         // Execute
         if run {
-            // SIMULATOR=$(xcrun simctl list --json | jq -r '[ .devices | values[] ] | flatten[] | select(.state == "Booted") | .name' | fzf -1)
-            // xcrun simctl install $SIMULATOR "$APP_DIR"
-            // xcrun simctl launch $SIMULATOR "io.github.shff.TempApp"
+            Command::new("xcrun")
+                .arg("simctl")
+                .arg("boot")
+                .arg(simulator.clone())
+                .output()
+                .unwrap();
+            Command::new("xcrun")
+                .arg("simctl")
+                .arg("install")
+                .arg(simulator.clone())
+                .arg(bundle)
+                .output()
+                .unwrap();
+            Command::new("xcrun")
+                .arg("simctl")
+                .arg("launch")
+                .arg(simulator.clone())
+                .arg(unique_id)
+                .output()
+                .unwrap();
         }
     }
 
@@ -353,8 +373,8 @@ fn write_plist(path: PathBuf, commands: Vec<String>) {
             .arg(path.clone())
             .arg("-c")
             .arg(command)
-            .output()
-            .ok();
+            .status()
+            .expect("Can't write Plist file");
     }
 }
 
