@@ -13,7 +13,7 @@ fn main() {
 fn run() -> Result<(), Box<dyn Error>> {
     let mut run = false;
     let mut mode = "debug";
-    let mut platform = "macos";
+    let mut platform = PLATFORM;
     let mut signature = "SHF".to_string();
     let mut simulator = "iPhone SE (2nd generation)".to_string();
 
@@ -27,6 +27,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             "win" => platform = "win",
             "android" => platform = "android",
             "x11" => platform = "x11",
+            "web" => platform = "web",
             "--release" => mode = "release",
             "--simulator" => simulator = args.next().ok_or("Simulator name expected")?,
             "--signature" => signature = args.next().ok_or("Signature name expected")?,
@@ -77,7 +78,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         remove_file(plist.clone()).ok();
         let plist_keys = vec![
             format!("Add :CFBundleDisplayName string \"{}\"", app_name),
-            format!("Add :CFBundleIdentifier string \"vigier.{}\"", app_name),
+            format!("Add :CFBundleIdentifier string \"{}\"", app_name),
         ];
         for key in plist_keys {
             Command::new("/usr/libexec/PlistBuddy")
@@ -108,10 +109,9 @@ fn run() -> Result<(), Box<dyn Error>> {
 
         // Sign
         if mode == "release" {
-            let signature = "SHF";
             Command::new("codesign")
                 .arg("-s".to_string())
-                .arg(signature)
+                .arg(signature.clone())
                 .arg(bundle.clone())
                 .status()?;
         }
@@ -332,6 +332,20 @@ fn run() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    //
+    // WASM Compilation
+    //
+
+    if platform == "web" {
+        let _output = out_dir.join(format!("{}.wasm", app_name));
+
+        // Write Wrapper to Disk
+        let wrapper = include_str!("native/web.html");
+        let filename = out_dir.join(format!("{}.html", app_name));
+        let mut file = File::create(filename.clone())?;
+        file.write_all(wrapper.as_bytes())?;
+    }
+
     Ok(())
 }
 
@@ -341,3 +355,10 @@ const ARCH: &str = "darwin-x86_64";
 const ARCH: &str = "linux-x86_64";
 #[cfg(target_os = "windows")]
 const ARCH: &str = "windows-x86_64";
+
+#[cfg(target_os = "macos")]
+const PLATFORM: &str = "macos";
+#[cfg(target_os = "linux")]
+const PLATFORM: &str = "x11";
+#[cfg(target_os = "windows")]
+const PLATFORM: &str = "win32";

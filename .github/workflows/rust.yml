@@ -11,12 +11,14 @@ jobs:
       - run: cargo install --path .
       - run : cargo appify macos --release
       - run : cargo appify ios --release
+      - run : cargo appify web --release
       - uses: actions/upload-artifact@v2
         with:
           name: vigier-macos
           path: |
             target/ios/App.app
             target/macos/App.app
+            target/web/App.*
   linux:
     runs-on: ubuntu-latest
     steps:
