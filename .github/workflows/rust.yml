@@ -9,9 +9,9 @@ jobs:
       - uses: actions/checkout@v2
       - run: rustup target add x86_64-apple-ios aarch64-apple-ios
       - run: cargo install --path .
-      - run : cargo appify macos --release
-      - run : cargo appify ios --release
-      - run : cargo appify web --release
+      - run : vigier macos --release
+      - run : vigier ios --release
+      - run : vigier web --release
       - uses: actions/upload-artifact@v2
         with:
           name: vigier-macos
@@ -26,8 +26,8 @@ jobs:
       - run: rustup target add i686-unknown-linux-gnu x86_64-unknown-linux-gnu wasm32-unknown-unknown i686-linux-android x86_64-linux-android armv7-linux-androideabi aarch64-linux-android
       - run: sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install libc6-dev libc6-dev-i386 mesa-common-dev libgl1-mesa-dev libgl1 mesa-common-dev:i386 libgl1-mesa-dev:i386 libgl1:i386 libasound2-dev libasound2-dev:i386
       - run: cargo install --path .
-      - run: cargo appify x11 --release
-      - run: cargo appify android --release
+      - run: vigier x11 --release
+      - run: vigier android --release
       - uses: actions/upload-artifact@v2
         with:
           name: vigier-linux
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
       - run: cargo install --path .
-      - run: cargo appify win --release
+      - run: vigier win --release
       - uses: actions/upload-artifact@v2
         with:
           name: vigier-win32

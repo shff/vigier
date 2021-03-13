@@ -54,8 +54,10 @@ fn run() -> Result<(), Box<dyn Error>> {
     let current_dir = env::current_dir()?;
     let target_dir = current_dir.join("target");
     let out_dir = target_dir.join(platform);
+    let tmp_dir = target_dir.join("tmp");
     create_dir(target_dir).ok();
     create_dir(out_dir.clone()).ok();
+    create_dir(tmp_dir.clone()).ok();
 
     //
     // MacOS Compilation
@@ -90,7 +92,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
         // Write Wrapper to Disk
         let wrapper = include_str!("native/macos.m");
-        let filename = out_dir.join("wrapper.m").display().to_string();
+        let filename = tmp_dir.join("wrapper.m").display().to_string();
         let mut file = File::create(filename.clone())?;
         file.write_all(wrapper.as_bytes())?;
 
@@ -165,7 +167,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
         // Write Wrapper to Disk
         let wrapper = include_str!("native/ios.m");
-        let filename = out_dir.join("wrapper.m").display().to_string();
+        let filename = tmp_dir.join("wrapper.m").display().to_string();
         let mut file = File::create(filename.clone())?;
         file.write_all(wrapper.as_bytes())?;
 
@@ -257,7 +259,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
         // Write Wrapper to Disk
         let wrapper = include_str!("native/android.c");
-        let filename = out_dir.join("wrapper.c").display().to_string();
+        let filename = tmp_dir.join("wrapper.c").display().to_string();
         let mut file = File::create(filename.clone())?;
         file.write_all(wrapper.as_bytes())?;
 
@@ -284,7 +286,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
         // Write Wrapper to Disk
         let wrapper = include_str!("native/x11.c");
-        let filename = out_dir.join("wrapper.c").display().to_string();
+        let filename = tmp_dir.join("wrapper.c").display().to_string();
         let mut file = File::create(filename.clone())?;
         file.write_all(wrapper.as_bytes())?;
 
@@ -315,7 +317,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
         // Write Wrapper to Disk
         let wrapper = include_str!("native/win32.c");
-        let filename = out_dir.join("wrapper.c");
+        let filename = tmp_dir.join("wrapper.c");
         let mut file = File::create(filename.clone())?;
         file.write_all(wrapper.as_bytes())?;
 
