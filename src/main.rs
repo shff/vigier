@@ -340,6 +340,10 @@ fn run() -> Result<(), Box<dyn Error>> {
         let filename = out_dir.join(format!("{}.html", app_name));
         let mut file = File::create(filename.clone())?;
         file.write_all(wrapper.as_bytes())?;
+
+        if run && PLATFORM == "macos" {
+            Command::new("open").arg(filename).output().ok();
+        }
     }
 
     Ok(())
