@@ -243,18 +243,12 @@ fn run() -> Result<(), Box<dyn Error>> {
 
         // Get SDK Path
         let ndk_platform = 30;
-        let ndk_home =
-            env::var_os("ANDROID_NDK_HOME").ok_or("ANDROID_NDK_HOME variable required")?;
-        let ndk_flags = format!(
-            "-I{}/sources/android/native_app_glue",
-            ndk_home.to_str().unwrap()
-        );
+        let ndk_home = env::var_os("ANDROID_NDK_HOME").ok_or("ANDROID_NDK_HOME not set")?;
+        let ndk_home = ndk_home.to_str().unwrap();
+        let ndk_flags = format!("-I{}/sources/android/native_app_glue", ndk_home);
         let ndk_linker = format!(
             "{}/toolchains/llvm/prebuilt/{}/bin/{}{}-clang",
-            ndk_home.to_str().unwrap(),
-            &ARCH,
-            ndk_target,
-            ndk_platform
+            ndk_home, &ARCH, ndk_target, ndk_platform
         );
 
         // Write Wrapper to Disk
