@@ -54,10 +54,9 @@ fn run() -> Result<(), Box<dyn Error>> {
     let current_dir = env::current_dir()?;
     let target_dir = current_dir.join("target");
     let out_dir = target_dir.join(platform);
-    let tmp_dir = target_dir.join("tmp");
+    let tmp_dir = std::env::temp_dir();
     create_dir(target_dir).ok();
     create_dir(out_dir.clone()).ok();
-    create_dir(tmp_dir.clone()).ok();
 
     //
     // MacOS Compilation
