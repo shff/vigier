@@ -69,6 +69,9 @@ fn run() -> Result<(), Box<dyn Error>> {
         let mac_os = contents.join("MacOS");
         let output = mac_os.join(app_name);
 
+        let intel_output = tmp_dir.join("intel");
+        let arm_output = tmp_dir.join("arm");
+
         // Create Bundle
         create_dir(bundle.clone()).ok();
         create_dir(contents.clone()).ok();
@@ -95,7 +98,22 @@ fn run() -> Result<(), Box<dyn Error>> {
         let mut file = File::create(filename.clone())?;
         file.write_all(wrapper.as_bytes())?;
 
-        // Compile
+        // Compile x64
+        let mut args = vec![];
+        if mode == "debug" {
+            args.push("-fsanitize=undefined".into());
+        }
+        args.push("-Wall".into());
+        args.push("-fmodules".into());
+        args.push("-Wno-deprecated-declarations".into());
+        args.push(filename.clone());
+        args.push("-target".into());
+        args.push("x86_64-apple-macos10.12".into());
+        args.push("-o".into());
+        args.push(intel_output.display().to_string());
+        Command::new("clang").args(args).status()?;
+
+        // Compile arm64
         let mut args = vec![];
         args.push("-Wall".into());
         args.push("-fmodules".into());
@@ -104,9 +122,20 @@ fn run() -> Result<(), Box<dyn Error>> {
             args.push("-fsanitize=undefined".into());
         }
         args.push(filename);
+        args.push("-target".into());
+        args.push("arm64-apple-macos10.12".into());
         args.push("-o".into());
-        args.push(output.display().to_string());
+        args.push(arm_output.display().to_string());
         Command::new("clang").args(args).status()?;
+
+        // Build Universal Binary
+        let mut args = vec![];
+        args.push("-create".into());
+        args.push("-output".into());
+        args.push(output.display().to_string());
+        args.push(intel_output.display().to_string());
+        args.push(arm_output.display().to_string());
+        Command::new("lipo").args(args).status()?;
 
         // Sign
         if mode == "release" {
