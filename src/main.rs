@@ -67,6 +67,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         let bundle = out_dir.join(format!("{}.app", app_name));
         let contents = bundle.join("Contents");
         let resources = contents.join("Resources");
+        let icon_path = resources.join("AppIcon.icns");
         let mac_os = contents.join("MacOS");
         let output = mac_os.join(app_name);
 
@@ -76,43 +77,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         create_dir(resources.clone()).ok();
         create_dir(mac_os).ok();
 
-        // Create Icon Set
-        if std::path::Path::new("icon.png").exists() {
-            let icon_dir = tmp_dir.join("icons.iconset");
-            let icon_path = resources.join("AppIcon.icns");
-            create_dir(icon_dir.clone()).ok();
-            for j in 5..=10 {
-                let w = i32::pow(2, j);
-
-                let icon_1x = icon_dir.join(format!("icon_{}x{}.png", w, w));
-                let icon_2x = icon_dir.join(format!("icon_{}x{}@2x.png", w, w));
-
-                let mut args = vec![];
-                args.push("-z".to_string());
-                args.push(w.to_string());
-                args.push(w.to_string());
-                args.push("icon.png".to_string());
-                args.push("--out".to_string());
-                args.push(icon_1x.display().to_string());
-                Command::new("sips").args(args).output()?;
-
-                let mut args = vec![];
-                args.push("-z".to_string());
-                args.push((w * 2).to_string());
-                args.push((w * 2).to_string());
-                args.push("icon.png".to_string());
-                args.push("--out".to_string());
-                args.push(icon_2x.display().to_string());
-                Command::new("sips").args(args).output()?;
-            }
-            Command::new("iconutil")
-                .arg("-c")
-                .arg("icns")
-                .arg(icon_dir)
-                .arg("--output")
-                .arg(icon_path)
-                .status()?;
-        }
+        create_icons(icon_path)?;
 
         // Create Property List
         let plist = contents.join("Info.plist");
@@ -204,11 +169,14 @@ fn run() -> Result<(), Box<dyn Error>> {
     if platform == "ios" {
         // Define Paths
         let bundle = out_dir.join(format!("{}.app", app_name));
+        let icon_path = bundle.join("AppIcon.icns");
         let output = bundle.join(app_name);
         let unique_id = format!("io.github.shff.ge.{}", app_name);
 
         // Create Bundle
         create_dir(bundle.clone()).ok();
+
+        create_icons(icon_path)?;
 
         // Create Property List
         let plist = bundle.join("Info.plist");
@@ -418,6 +386,50 @@ fn run() -> Result<(), Box<dyn Error>> {
             Command::new("open").arg(filename).output().ok();
         }
     }
+
+    Ok(())
+}
+
+fn create_icons(icon_path: std::path::PathBuf) -> Result<(), Box<dyn Error>> {
+    if !std::path::Path::new("icon.png").exists() {
+        return Ok(());
+    }
+
+    let tmp_dir = std::env::temp_dir();
+    let icon_dir = tmp_dir.join("icons.iconset");
+
+    create_dir(icon_dir.clone()).ok();
+    for j in 5..=10 {
+        let w = i32::pow(2, j);
+
+        let icon_1x = icon_dir.join(format!("icon_{}x{}.png", w, w));
+        let icon_2x = icon_dir.join(format!("icon_{}x{}@2x.png", w, w));
+
+        let mut args = vec![];
+        args.push("-z".to_string());
+        args.push(w.to_string());
+        args.push(w.to_string());
+        args.push("icon.png".to_string());
+        args.push("--out".to_string());
+        args.push(icon_1x.display().to_string());
+        Command::new("sips").args(args).output()?;
+
+        let mut args = vec![];
+        args.push("-z".to_string());
+        args.push((w * 2).to_string());
+        args.push((w * 2).to_string());
+        args.push("icon.png".to_string());
+        args.push("--out".to_string());
+        args.push(icon_2x.display().to_string());
+        Command::new("sips").args(args).output()?;
+    }
+    Command::new("iconutil")
+        .arg("-c")
+        .arg("icns")
+        .arg(icon_dir)
+        .arg("--output")
+        .arg(icon_path)
+        .status()?;
 
     Ok(())
 }
