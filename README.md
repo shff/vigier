@@ -2,12 +2,6 @@
 
 ![CI](https://github.com/shff/ge/workflows/Rust/badge.svg)
 
-Vigier is an minimalist, opinionated, game framework. It provides windowing, 3D graphics, controls, audio, asset loading, bundling and dev tools. The aim is to provide functionality required by most games but with a very small API. It trades flexibility by simplicity.
-
-The abstraction layers use lower-level languages and are are simple to understand. The API is declarative and decouples the low-level aspects from the game code. Give it a scene graph and it will handle the low-level aspects of each renderer. Worry only about the high-level aspects.
-
-It supports MacOS, iOS, Win32, X11, Android and Web. It comes with a tool for real-time development. It also handles the bundling and for each platform.
-
 ## LICENSE
 
 ```
