@@ -7,19 +7,18 @@
 NSString *shader =
     @"#include <metal_stdlib>\n"
      "using namespace metal;"
-     "vertex float4 v_simple("
-     "    uint idx [[vertex_id]])"
+     "vertex float4 v_simple(uint idx [[vertex_id]])"
      "{"
      "    float2 pos[] = { {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };"
      "    return float4(pos[idx].xy, 0, 1);"
      "}"
      "fragment half4 f_simple("
-     "    float4 in [[stage_in]],"
+     "    float4 in [[ position ]],"
      "    texture2d<half> albedo [[ texture(0) ]]"
      ")"
      "{"
-     "    constexpr sampler Sampler(coord::pixel,filter::nearest);"
-     "    return half4(albedo.sample(Sampler, 0, 0).xyz, 1);"
+     "    constexpr sampler Sampler(coord::pixel, filter::nearest);"
+     "    return half4(albedo.sample(Sampler, in.xy).xyz, 1);"
      "}";
 
 static OSStatus audioCallback(void *inRefCon,
