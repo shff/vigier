@@ -7,41 +7,47 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - run: rustup target add x86_64-apple-ios aarch64-apple-ios
-      - run: cargo install --path .
-      - run : vigier macos --release
-      - run : vigier ios --release
-      - run : vigier web --release
+      - run: rustup target add aarch64-apple-darwin x86_64-apple-darwin x86_64-apple-ios aarch64-apple-ios wasm32-unknown-unknown
+      - run: cargo install cargo-bundle
+      - run: cargo update
+      - run: cargo bundle --format osx --target=x86_64-apple-darwin --release
+      # - run: cargo bundle --format osx --target=aarch64-apple-darwin --release
+      - run: cargo bundle --format ios --target=x86_64-apple-ios --release
+      - run: cargo bundle --format ios --target=aarch64-apple-ios --release
       - uses: actions/upload-artifact@v2
         with:
           name: vigier-macos
           path: |
-            target/ios/App.app
-            target/macos/App.app
-            target/web/App.*
-  linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: rustup target add i686-unknown-linux-gnu x86_64-unknown-linux-gnu wasm32-unknown-unknown i686-linux-android x86_64-linux-android armv7-linux-androideabi aarch64-linux-android
-      - run: sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install libc6-dev libc6-dev-i386 mesa-common-dev libgl1-mesa-dev libgl1 mesa-common-dev:i386 libgl1-mesa-dev:i386 libgl1:i386 libasound2-dev libasound2-dev:i386
-      - run: cargo install --path .
-      - run: vigier x11 --release
-      - run: vigier android --release
-      - uses: actions/upload-artifact@v2
-        with:
-          name: vigier-linux
-          path: |
-            target/android/App
-            target/x11/App
+            target/aarch64-apple-darwin/release/bundle/osx/Vigier.app
+            target/x86_64-apple-darwin/release/bundle/osx/Vigier.app
+            target/x86_64-apple-ios/release/bundle/ios/Vigier.app
+            target/aarch64-apple-ios/release/bundle/ios/Vigier.app
   windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ilammy/msvc-dev-cmd@v1
-      - run: cargo install --path .
-      - run: vigier win --release
+      - run: rustup target add x86_64-pc-windows-msvc i686-pc-windows-msvc
+      - run: cargo update
+      - run: cargo build --target=x86_64-pc-windows-msvc --release
+      - run: cargo build --target=i686-pc-windows-msvc --release
       - uses: actions/upload-artifact@v2
         with:
           name: vigier-win32
-          path: target/win/App.exe
+          path: |
+            target/x86_64-pc-windows-msvc/release/vigier.exe
+            target/i686-pc-windows-msvc/release/vigier.exe
+  # linux:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - run: rustup target add i686-unknown-linux-gnu x86_64-unknown-linux-gnu i686-linux-android x86_64-linux-android armv7-linux-androideabi aarch64-linux-android
+  #     - run: sudo dpkg --add-architecture i386 && sudo apt-get update && sudo apt-get install libc6-dev libc6-dev-i386 mesa-common-dev libgl1-mesa-dev libgl1 mesa-common-dev:i386 libgl1-mesa-dev:i386 libgl1:i386 libasound2-dev libasound2-dev:i386
+  #     - run: cargo install --path .
+  #     - run: vigier x11 --release
+  #     - run: vigier android --release
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         name: vigier-linux
+  #         path: |
+  #           target/android/App
+  #           target/x11/App

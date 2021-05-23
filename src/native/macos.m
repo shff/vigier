@@ -55,6 +55,7 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) float clickX, clickY;
 @property(nonatomic, assign) float deltaX, deltaY;
 @property(nonatomic, assign) int mouseMode;
+@property(nonatomic, assign) int cursorVisible;
 @end
 
 @implementation App
@@ -235,37 +236,37 @@ static OSStatus audioCallback(void *inRefCon,
   _albedoTexture = [_device newTextureWithDescriptor:desc];
 }
 
-- (void)mouseMoved:(NSEvent *)e
+- (void)mouseMoved:(NSEvent *)event
 {
-  if (![_window.contentView hitTest:[e locationInWindow]])
+  if (![_window.contentView hitTest:[event locationInWindow]])
     [self toggleMouse:true];
   else if (_mouseMode == 1)
   {
     [self toggleMouse:false];
-    _deltaX += [e deltaX];
-    _deltaY += [e deltaY];
+    _deltaX += [event deltaX];
+    _deltaY += [event deltaY];
   }
 }
 
-- (void)mouseUp:(NSEvent *)e
+- (void)mouseUp:(NSEvent *)event
 {
   if (_mouseMode == 2)
     [self toggleMouse:true];
-  else if ([e clickCount])
+  else if ([event clickCount])
   {
-    _clickX = [e locationInWindow].x;
-    _clickY = [e locationInWindow].x;
+    _clickX = [event locationInWindow].x;
+    _clickY = [event locationInWindow].x;
   }
 }
 
-- (void)mouseDragged:(NSEvent *)e
+- (void)mouseDragged:(NSEvent *)event
 {
-  if (![_window.contentView hitTest:[e locationInWindow]] || _mouseMode != 2)
+  if (![_window.contentView hitTest:[event locationInWindow]] || _mouseMode != 2)
     return;
 
   [self toggleMouse:false];
-  _deltaX += [e deltaX];
-  _deltaY += [e deltaY];
+  _deltaX += [event deltaX];
+  _deltaY += [event deltaY];
 }
 
 - (void)windowWillClose:(NSWindow *)sender
@@ -275,10 +276,11 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)toggleMouse:(bool)mode
 {
-  if (mode == CGCursorIsVisible()) return;
+  if (mode == _cursorVisible) return;
 
   mode ? [NSCursor unhide] : [NSCursor hide];
   CGAssociateMouseAndMouseCursorPosition(mode);
+  _cursorVisible = mode;
 }
 @end
 
