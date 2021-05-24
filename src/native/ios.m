@@ -223,19 +223,19 @@ static OSStatus audioCallback(void *inRefCon,
   CGRect bounds = [_mainWindow frame];
   _layer.frame = bounds;
 
+  _depthTexture = [self createTexture:MTLPixelFormatDepth32Float_Stencil8 w:bounds.size.width h:bounds.size.height];
+  _albedoTexture = [self createTexture:MTLPixelFormatRGBA8Unorm_sRGB w:bounds.size.width h:bounds.size.height];
+}
+
+- (id<MTLTexture>)createTexture:(MTLPixelFormat)format w:(int)w h:(int)h
+{
   MTLTextureDescriptor *desc = [[MTLTextureDescriptor alloc] init];
   desc.storageMode = MTLStorageModePrivate;
   desc.usage = MTLTextureUsageRenderTarget;
-  desc.width = bounds.size.width;
-  desc.height = bounds.size.height;
-
-  // Depth/Stencil Texture
-  desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
-  _depthTexture = [_device newTextureWithDescriptor:desc];
-
-  // Albedo Texture
-  desc.pixelFormat = MTLPixelFormatRGBA8Unorm_sRGB;
-  _albedoTexture = [_device newTextureWithDescriptor:desc];
+  desc.width = w;
+  desc.height = h;
+  desc.pixelFormat = format;
+  return [_device newTextureWithDescriptor:desc];
 }
 @end
 

@@ -220,19 +220,19 @@ static OSStatus audioCallback(void *inRefCon,
 {
   CGSize size = [_window.contentView frame].size;
 
+  _depthTexture = [self createTexture:MTLPixelFormatDepth32Float_Stencil8 w:size.width h:size.height];
+  _albedoTexture = [self createTexture:MTLPixelFormatRGBA8Unorm_sRGB w:size.width h:size.height];
+}
+
+- (id<MTLTexture>)createTexture:(MTLPixelFormat)format w:(int)w h:(int)h
+{
   MTLTextureDescriptor *desc = [[MTLTextureDescriptor alloc] init];
   desc.storageMode = MTLStorageModePrivate;
   desc.usage = MTLTextureUsageRenderTarget;
-  desc.width = size.width;
-  desc.height = size.height;
-
-  // Depth/Stencil Texture
-  desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
-  _depthTexture = [_device newTextureWithDescriptor:desc];
-
-  // Albedo Texture
-  desc.pixelFormat = MTLPixelFormatRGBA8Unorm_sRGB;
-  _albedoTexture = [_device newTextureWithDescriptor:desc];
+  desc.width = w;
+  desc.height = h;
+  desc.pixelFormat = format;
+  return [_device newTextureWithDescriptor:desc];
 }
 
 - (void)mouseMoved:(NSEvent *)event
