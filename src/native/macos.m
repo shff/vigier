@@ -219,6 +219,7 @@ static OSStatus audioCallback(void *inRefCon,
 - (void)createBuffers
 {
   CGSize size = [_window.contentView frame].size;
+  [_layer setDrawableSize:size];
 
   _depthTexture = [self createTexture:MTLPixelFormatDepth32Float_Stencil8 w:size.width h:size.height];
   _albedoTexture = [self createTexture:MTLPixelFormatRGBA8Unorm_sRGB w:size.width h:size.height];
