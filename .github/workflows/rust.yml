@@ -7,11 +7,12 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+      - run: sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*
       - run: rustup target add aarch64-apple-darwin x86_64-apple-darwin x86_64-apple-ios aarch64-apple-ios wasm32-unknown-unknown
       - run: cargo install cargo-bundle
       - run: cargo update
       - run: cargo bundle --format osx --target=x86_64-apple-darwin --release
-      # - run: cargo bundle --format osx --target=aarch64-apple-darwin --release
+      - run: cargo bundle --format osx --target=aarch64-apple-darwin --release
       - run: cargo bundle --format ios --target=x86_64-apple-ios --release
       - run: cargo bundle --format ios --target=aarch64-apple-ios --release
       - uses: actions/upload-artifact@v2
