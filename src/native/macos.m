@@ -21,26 +21,38 @@ NSString *shader =
      "    return half4(albedo.sample(Sampler, in.xy).xyz, 1);"
      "}";
 
+typedef struct
+{
+  void *data;
+  int state;
+  size_t position;
+  size_t length;
+} voice;
+
 static OSStatus audioCallback(void *inRefCon,
                               AudioUnitRenderActionFlags *ioActionFlags,
                               const AudioTimeStamp *inTimeStamp,
                               UInt32 inBusNumber, UInt32 inNumberFrames,
                               AudioBufferList *ioData)
 {
-  (void)inRefCon;
   (void)ioActionFlags;
   (void)inTimeStamp;
   (void)inBusNumber;
 
+  voice *voices = (voice *)inRefCon;
   SInt16 *left = (SInt16 *)ioData->mBuffers[0].mData;
   SInt16 *right = (SInt16 *)ioData->mBuffers[1].mData;
   for (UInt32 frame = 0; frame < inNumberFrames; frame++)
   {
     left[frame] = right[frame] = 0;
-    for (int voice = 0; voice < 32; voice++)
+    for (int i = 0; i < 32; i++)
     {
-      left[frame] += 0;
-      right[frame] += 0;
+      if (voices[i].state != 1 || voices[i].position >= voices[i].length)
+        continue;
+
+      left[frame] += ((short *)voices[i].data)[voices[i].position] * 0.01f;
+      right[frame] += ((short *)voices[i].data)[voices[i].position] * 0.01f;
+      voices[i].position++;
     }
   }
 
@@ -61,6 +73,7 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) float deltaX, deltaY;
 @property(nonatomic, assign) int mouseMode;
 @property(nonatomic, assign) int cursorVisible;
+@property(nonatomic, assign) voice *voices;
 @end
 
 @implementation App
@@ -69,6 +82,9 @@ static OSStatus audioCallback(void *inRefCon,
   (void)notification;
   @autoreleasepool
   {
+    _voices = malloc(sizeof(voice) * 32);
+    memset(_voices, 0, sizeof(voice) * 32);
+
     AudioComponentDescription compDesc = {
         .componentType = kAudioUnitType_Output,
         .componentSubType = kAudioUnitSubType_DefaultOutput,
@@ -93,7 +109,7 @@ static OSStatus audioCallback(void *inRefCon,
                          sizeof(audioFormat));
     AudioUnitSetProperty(audioUnit, kAudioUnitProperty_SetRenderCallback,
                          kAudioUnitScope_Input, 0,
-                         &(AURenderCallbackStruct){audioCallback, NULL},
+                         &(AURenderCallbackStruct){audioCallback, &_voices},
                          sizeof(AURenderCallbackStruct));
     AudioUnitInitialize(audioUnit);
     AudioOutputUnitStart(audioUnit);
