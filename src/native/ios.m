@@ -223,8 +223,12 @@ static OSStatus audioCallback(void *inRefCon,
   CGRect bounds = [_mainWindow frame];
   _layer.frame = bounds;
 
-  _depthTexture = [self createTexture:MTLPixelFormatDepth32Float_Stencil8 w:bounds.size.width h:bounds.size.height];
-  _albedoTexture = [self createTexture:MTLPixelFormatRGBA8Unorm_sRGB w:bounds.size.width h:bounds.size.height];
+  _depthTexture = [self createTexture:MTLPixelFormatDepth32Float_Stencil8
+                                    w:bounds.size.width
+                                    h:bounds.size.height];
+  _albedoTexture = [self createTexture:MTLPixelFormatRGBA8Unorm_sRGB
+                                     w:bounds.size.width
+                                     h:bounds.size.height];
 }
 
 - (id<MTLTexture>)createTexture:(MTLPixelFormat)format w:(int)w h:(int)h
