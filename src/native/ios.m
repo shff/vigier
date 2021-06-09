@@ -32,10 +32,16 @@ static OSStatus audioCallback(void *inRefCon,
   (void)inTimeStamp;
   (void)inBusNumber;
 
-  Float32 *buffer = (Float32 *)ioData->mBuffers[0].mData;
+  SInt16 *left = (SInt16 *)ioData->mBuffers[0].mData;
+  SInt16 *right = (SInt16 *)ioData->mBuffers[1].mData;
   for (UInt32 frame = 0; frame < inNumberFrames; frame++)
   {
-    buffer[frame] = 0;
+    left[frame] = right[frame] = 0;
+    for (int voice = 0; voice < 32; voice++)
+    {
+      left[frame] += 0;
+      right[frame] += 0;
+    }
   }
 
   return 0;
@@ -67,13 +73,14 @@ static OSStatus audioCallback(void *inRefCon,
   AudioStreamBasicDescription audioFormat = {
       .mSampleRate = 44100.00,
       .mFormatID = kAudioFormatLinearPCM,
-      .mFormatFlags =
-          kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved,
+      .mFormatFlags = kAudioFormatFlagIsSignedInteger |
+                      kAudioFormatFlagIsPacked |
+                      kAudioFormatFlagIsNonInterleaved,
+      .mBitsPerChannel = 16,
+      .mChannelsPerFrame = 2,
       .mFramesPerPacket = 1,
-      .mChannelsPerFrame = 1,
-      .mBitsPerChannel = 32,
-      .mBytesPerPacket = 4,
-      .mBytesPerFrame = 4};
+      .mBytesPerFrame = 2,
+      .mBytesPerPacket = 2};
 
   // Initialize Audio
   AudioUnit audioUnit;
