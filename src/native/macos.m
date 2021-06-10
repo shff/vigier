@@ -47,7 +47,7 @@ static OSStatus audioCallback(void *inRefCon,
     left[frame] = right[frame] = 0;
     for (int i = 0; i < 32; i++)
     {
-      if (voices[i].state != 1 || voices[i].position >= voices[i].length)
+      if (voices[i].state == 0 || voices[i].position >= voices[i].length)
         continue;
 
       left[frame] += ((short *)voices[i].data)[voices[i].position] * 0.01f;
@@ -109,7 +109,7 @@ static OSStatus audioCallback(void *inRefCon,
                          sizeof(audioFormat));
     AudioUnitSetProperty(audioUnit, kAudioUnitProperty_SetRenderCallback,
                          kAudioUnitScope_Input, 0,
-                         &(AURenderCallbackStruct){audioCallback, &_voices},
+                         &(AURenderCallbackStruct){audioCallback, _voices},
                          sizeof(AURenderCallbackStruct));
     AudioUnitInitialize(audioUnit);
     AudioOutputUnitStart(audioUnit);
