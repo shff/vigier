@@ -320,8 +320,7 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)toggleMouse:(bool)mode
 {
-  if (mode == _cursorVisible)
-    return;
+  if (mode == _cursorVisible) return;
 
   mode ? [NSCursor unhide] : [NSCursor hide];
   CGAssociateMouseAndMouseCursorPosition(mode);
