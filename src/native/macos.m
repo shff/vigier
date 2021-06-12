@@ -21,6 +21,20 @@ NSString *shader =
      "    return half4(albedo.sample(Sampler, in.xy).xyz, 1);"
      "}";
 
+NSString *trisShader =
+    @"#include <metal_stdlib>\n"
+     "using namespace metal;"
+     "vertex float4 v_simple("
+     "    const device packed_float3* vertex_array [[ buffer(0) ]],"
+     "    unsigned int vid [[ vertex_id ]])"
+     "{"
+     "    return float4(vertex_array[vid], 1.0);"
+     "}"
+     "fragment half4 f_simple()"
+     "{"
+     "    return half4(0, 0, 0, 1);"
+     "}";
+
 typedef struct
 {
   void *data;
@@ -66,6 +80,7 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) CAMetalLayer *layer;
 @property(nonatomic, assign) id<MTLTexture> depthTexture;
 @property(nonatomic, assign) id<MTLTexture> albedoTexture;
+@property(nonatomic, assign) id<MTLRenderPipelineState> trisState;
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
 @property(nonatomic, assign) double timerCurrent;
 @property(nonatomic, assign) double lag;
@@ -121,6 +136,7 @@ static OSStatus audioCallback(void *inRefCon,
     [_layer setDevice:_device];
 
     _quadState = [self createState:shader];
+    _trisState = [self createState:trisShader];
 
     // Create the Window
     _window =
