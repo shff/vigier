@@ -61,11 +61,13 @@ static OSStatus audioCallback(void *inRefCon,
     left[frame] = right[frame] = 0;
     for (int i = 0; i < 32; i++)
     {
-      if (voices[i].state == 0 || voices[i].position >= voices[i].length)
+      if (voices[i].state == 0)
         continue;
+      if (voices[i].position >= voices[i].length - 1)
+        voices[i].state = 0;
 
-      left[frame] += ((short *)voices[i].data)[voices[i].position] * 0.01f;
-      right[frame] += ((short *)voices[i].data)[voices[i].position] * 0.01f;
+      left[frame] += ((short *)voices[i].data)[voices[i].position] * 1.0f;
+      right[frame] += ((short *)voices[i].data)[voices[i].position] * 1.0f;
       voices[i].position++;
     }
   }
