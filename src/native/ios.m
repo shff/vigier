@@ -21,6 +21,20 @@ NSString *shader =
      "    return half4(albedo.sample(Sampler, in.xy).xyz, 1);"
      "}";
 
+NSString *trisShader =
+    @"#include <metal_stdlib>\n"
+     "using namespace metal;"
+     "vertex float4 v_simple("
+     "    const device packed_float3* vertex_array [[ buffer(0) ]],"
+     "    unsigned int vid [[ vertex_id ]])"
+     "{"
+     "    return float4(vertex_array[vid], 1.0);"
+     "}"
+     "fragment half4 f_simple()"
+     "{"
+     "    return half4(0, 0, 0, 1);"
+     "}";
+
 typedef struct
 {
   void *data;
@@ -118,13 +132,8 @@ static OSStatus audioCallback(void *inRefCon,
   _layer.device = _device;
 
   // Final State
-  id library = [_device newLibraryWithSource:shader options:nil error:NULL];
-  MTLRenderPipelineDescriptor *desc = [MTLRenderPipelineDescriptor new];
-  desc.vertexFunction = [library newFunctionWithName:@"v_simple"];
-  desc.fragmentFunction = [library newFunctionWithName:@"f_simple"];
-  desc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
-  desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
-  _quadState = [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
+  _quadState = [self createState:shader];
+  _quadState = [self createState:trisShader];
 
   // Create Window
   _mainWindow = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
@@ -252,6 +261,17 @@ static OSStatus audioCallback(void *inRefCon,
   _albedoTexture = [self createTexture:MTLPixelFormatRGBA8Unorm_sRGB
                                      w:bounds.size.width
                                      h:bounds.size.height];
+}
+
+- (id<MTLRenderPipelineState>)createState:(NSString *)shader
+{
+  id library = [_device newLibraryWithSource:shader options:nil error:NULL];
+  MTLRenderPipelineDescriptor *desc = [MTLRenderPipelineDescriptor new];
+  desc.vertexFunction = [library newFunctionWithName:@"v_simple"];
+  desc.fragmentFunction = [library newFunctionWithName:@"f_simple"];
+  desc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+  desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
+  return [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
 }
 
 - (id<MTLTexture>)createTexture:(MTLPixelFormat)format w:(int)w h:(int)h
