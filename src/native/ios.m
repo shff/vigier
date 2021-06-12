@@ -37,7 +37,7 @@ NSString *trisShader =
 
 typedef struct
 {
-  void *data;
+  short *data;
   int state;
   size_t position;
   size_t length;
@@ -66,8 +66,8 @@ static OSStatus audioCallback(void *inRefCon,
       if (voices[i].position >= voices[i].length - 1)
         voices[i].state = 0;
 
-      left[frame] += ((short *)voices[i].data)[voices[i].position] * 1.0f;
-      right[frame] += ((short *)voices[i].data)[voices[i].position] * 1.0f;
+      left[frame] += (voices[i].data)[voices[i].position] * 1.0f;
+      right[frame] += (voices[i].data)[voices[i].position] * 1.0f;
       voices[i].position++;
     }
   }
