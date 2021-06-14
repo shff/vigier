@@ -297,10 +297,10 @@ static OSStatus audioCallback(void *inRefCon,
 {
   if (_mouseMode == 2)
     [self toggleMouse:true];
-  else if ([event clickCount])
+  if ([event clickCount])
   {
     _clickX = [event locationInWindow].x;
-    _clickY = [event locationInWindow].x;
+    _clickY = [event locationInWindow].y;
   }
 }
 
