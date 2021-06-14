@@ -61,10 +61,8 @@ static OSStatus audioCallback(void *inRefCon,
     left[frame] = right[frame] = 0;
     for (int i = 0; i < 32; i++)
     {
-      if (voices[i].state == 0)
-        continue;
-      if (voices[i].position >= voices[i].length - 1)
-        voices[i].state = 0;
+      if (voices[i].state == 0) continue;
+      if (voices[i].position >= voices[i].length - 1) voices[i].state = 0;
 
       left[frame] += (voices[i].data)[voices[i].position] * 1.0f;
       right[frame] += (voices[i].data)[voices[i].position] * 1.0f;
@@ -295,8 +293,7 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)mouseUp:(NSEvent *)event
 {
-  if (_mouseMode == 2)
-    [self toggleMouse:true];
+  if (_mouseMode == 2) [self toggleMouse:true];
   if ([event clickCount])
   {
     _clickX = [event locationInWindow].x;
