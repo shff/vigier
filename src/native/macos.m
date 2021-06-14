@@ -321,6 +321,12 @@ static OSStatus audioCallback(void *inRefCon,
 {
   if (mode == _cursorVisible) return;
 
+  NSRect frame = [_window frame];
+  NSRect screen_frame = [[_window screen] frame];
+  if (mode)
+    CGWarpMouseCursorPosition(
+        CGPointMake(NSMidX(frame), screen_frame.size.height - NSMidY(frame)));
+
   mode ? [NSCursor unhide] : [NSCursor hide];
   CGAssociateMouseAndMouseCursorPosition(mode);
   _cursorVisible = mode;
