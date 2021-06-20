@@ -12,6 +12,9 @@
     <canvas id="app"></canvas>
     <script>
       (async function() {
+        // Prevent sleeping
+        if (navigator.wakeLock) await navigator.wakeLock.request("screen");
+
         // Initialize Library
         const response = await fetch("vigier.wasm");
         const bytes = await response.arrayBuffer();
