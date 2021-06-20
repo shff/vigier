@@ -11,8 +11,6 @@
   <body>
     <canvas id="app"></canvas>
     <script>
-      window.AudioContext = window.AudioContext || window.webkitAudioContext;
-
       (async function() {
         // Initialize Library
         const response = await fetch("vigier.wasm");
@@ -20,7 +18,7 @@
         const { instance } = await WebAssembly.instantiate(bytes, {});
 
         // Initialize Audio
-        const audio = new AudioContext({ sampleRate: 44100 });
+        const audio = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
         const node = audio.createScriptProcessor(2048, 0, 2);
         node.connect(audio.destination);
 
