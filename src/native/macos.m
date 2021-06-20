@@ -78,16 +78,11 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLDevice> device;
 @property(nonatomic, assign) id<MTLCommandQueue> queue;
 @property(nonatomic, assign) CAMetalLayer *layer;
-@property(nonatomic, assign) id<MTLTexture> depthTexture;
-@property(nonatomic, assign) id<MTLTexture> albedoTexture;
-@property(nonatomic, assign) id<MTLRenderPipelineState> trisState;
-@property(nonatomic, assign) id<MTLRenderPipelineState> quadState;
-@property(nonatomic, assign) double timerCurrent;
-@property(nonatomic, assign) double lag;
-@property(nonatomic, assign) float clickX, clickY;
-@property(nonatomic, assign) float deltaX, deltaY;
-@property(nonatomic, assign) int mouseMode;
-@property(nonatomic, assign) int cursorVisible;
+@property(nonatomic, assign) id<MTLTexture> depthTexture, albedoTexture;
+@property(nonatomic, assign) id<MTLRenderPipelineState> trisState, quadState;
+@property(nonatomic, assign) double timerCurrent, lag;
+@property(nonatomic, assign) float clickX, clickY, deltaX, deltaY;
+@property(nonatomic, assign) int mouseMode, cursorVisible;
 @property(nonatomic, assign) voice *voices;
 @end
 
