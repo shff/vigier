@@ -9,6 +9,20 @@ void (*glFramebufferTexture)(GLenum target, GLenum attachment, GLuint texture,
                              GLint level);
 void (*glDrawBuffers)(GLsizei n, const GLenum *bufs);
 
+int createTexture(unsigned int w, unsigned int h, unsigned int type)
+{
+  unsigned int texture;
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, type, w, h, 0, type, GL_FLOAT, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+  return texture;
+}
+
 int main()
 {
   Display *display = XOpenDisplay(NULL);
@@ -84,28 +98,12 @@ int main()
   glXMakeCurrent(display, window, context);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-  // Create G-Buffer
-  unsigned int backbuffer;
-  glGenTextures(1, &backbuffer);
-  glBindTexture(GL_TEXTURE_2D, backbuffer);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, 0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-
-  // Create Z-Buffer
-  unsigned int depthbuffer;
-  glGenTextures(1, &depthbuffer);
-  glBindTexture(GL_TEXTURE_2D, depthbuffer);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 800, 600, 0,
-               GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+  // Create Buffers
+  XWindowAttributes attr;
+  XGetWindowAttributes(display, window, &attr);
+  unsigned int backbuffer = createTexture(attr.width, attr.height, GL_RGBA);
+  unsigned int depthbuffer =
+      createTexture(attr.width, attr.height, GL_DEPTH_COMPONENT);
 
   // Create Framebuffer
   unsigned int gbuffer;
