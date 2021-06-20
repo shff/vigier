@@ -121,12 +121,7 @@ int main()
   uint64_t xscreenLag = 0.0;
 
   unsigned int mouseMode = 0;
-  int mouseX = 0;
-  int mouseY = 0;
-  int clickX = 0;
-  int clickY = 0;
-  unsigned int deltaX = 0;
-  unsigned int deltaY = 0;
+  int mouseX = 0, mouseY = 0, clickX = 0, clickY = 0, deltaX = 0, deltaY = 0;
 
   while (1)
   {
@@ -208,10 +203,7 @@ int main()
     }
 
     // Reset mouse vars
-    clickX = 0;
-    clickY = 0;
-    deltaX = 0;
-    deltaY = 0;
+    clickX = 0, clickY = 0, deltaX = 0, deltaY = 0;
 
     (void)clickX;
     (void)clickY;
