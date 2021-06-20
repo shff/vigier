@@ -3,6 +3,7 @@
 #include <alsa/asoundlib.h>
 
 void (*glGenFramebuffers)(GLsizei n, GLuint *framebuffers);
+void (*glDeleteFramebuffers)(GLsizei n, GLuint *framebuffers);
 void (*glBindFramebuffer)(GLenum target, GLuint framebuffer);
 void (*glBindFramebuffer)(GLenum target, GLuint framebuffer);
 void (*glFramebufferTexture)(GLenum target, GLenum attachment, GLuint texture,
@@ -82,6 +83,8 @@ int main()
   // Initialize OpenGL Extensions
   glGenFramebuffers = (void (*)())glXGetProcAddressARB(
       (const unsigned char *)"glGenFramebuffers");
+  glDeleteFramebuffers = (void (*)())glXGetProcAddressARB(
+      (const unsigned char *)"glDeleteFramebuffers");
   glBindFramebuffer = (void (*)())glXGetProcAddressARB(
       (const unsigned char *)"glBindFramebuffer");
   glBindFramebuffer = (void (*)())glXGetProcAddressARB(
@@ -216,6 +219,9 @@ int main()
     glXSwapBuffers(display, window);
   }
 
+  glDeleteTextures(1, &backbuffer);
+  glDeleteTextures(1, &depthbuffer);
+  glDeleteFramebuffers(1, &gbuffer);
   XUnmapWindow(display, window);
   XDestroyWindow(display, window);
   XCloseDisplay(display);
