@@ -92,6 +92,9 @@ static OSStatus audioCallback(void *inRefCon,
   _voices = malloc(sizeof(voice) * 32);
   memset(_voices, 0, sizeof(voice) * 32);
 
+  // Prevent sleeping
+  [UIApplication sharedApplication].idleTimerDisabled = YES;
+
   // Initialize Audio
   AudioComponentDescription compDesc = {
       .componentType = kAudioUnitType_Output,
