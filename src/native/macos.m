@@ -7,12 +7,12 @@
 NSString *shader =
     @"#include <metal_stdlib>\n"
      "using namespace metal;"
-     "vertex float4 v_simple(uint idx [[vertex_id]])"
+     "vertex float4 v_main(uint idx [[vertex_id]])"
      "{"
      "    float2 pos[] = { {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };"
      "    return float4(pos[idx].xy, 0, 1);"
      "}"
-     "fragment half4 f_simple("
+     "fragment half4 f_main("
      "    float4 in [[ position ]],"
      "    texture2d<half> albedo [[ texture(0) ]]"
      ")"
@@ -24,13 +24,13 @@ NSString *shader =
 NSString *trisShader =
     @"#include <metal_stdlib>\n"
      "using namespace metal;"
-     "vertex float4 v_simple("
+     "vertex float4 v_main("
      "    const device packed_float3* vertex_array [[ buffer(0) ]],"
      "    unsigned int vid [[ vertex_id ]])"
      "{"
      "    return float4(vertex_array[vid], 1.0);"
      "}"
-     "fragment half4 f_simple()"
+     "fragment half4 f_main()"
      "{"
      "    return half4(0, 0, 0, 1);"
      "}";
@@ -248,8 +248,8 @@ static OSStatus audioCallback(void *inRefCon,
 {
   id library = [_device newLibraryWithSource:shader options:nil error:NULL];
   MTLRenderPipelineDescriptor *desc = [MTLRenderPipelineDescriptor new];
-  desc.vertexFunction = [library newFunctionWithName:@"v_simple"];
-  desc.fragmentFunction = [library newFunctionWithName:@"f_simple"];
+  desc.vertexFunction = [library newFunctionWithName:@"v_main"];
+  desc.fragmentFunction = [library newFunctionWithName:@"f_main"];
   desc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
   desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
   return [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
