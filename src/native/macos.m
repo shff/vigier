@@ -79,7 +79,7 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLCommandQueue> queue;
 @property(nonatomic, assign) CAMetalLayer *layer;
 @property(nonatomic, assign) id<MTLTexture> depthTexture, albedoTexture;
-@property(nonatomic, assign) id<MTLRenderPipelineState> trisState, quadState;
+@property(nonatomic, assign) id<MTLRenderPipelineState> trisShader, postShader;
 @property(nonatomic, assign) double timerCurrent, lag;
 @property(nonatomic, assign) float clickX, clickY, deltaX, deltaY;
 @property(nonatomic, assign) int mouseMode, cursorVisible;
@@ -130,8 +130,8 @@ static OSStatus audioCallback(void *inRefCon,
     _layer = [CAMetalLayer layer];
     [_layer setDevice:_device];
 
-    _quadState = [self createState:shader];
-    _trisState = [self createState:trisShader];
+    _postShader = [self createShader:shader];
+    _trisShader = [self createShader:trisShader];
 
     // Create the Window
     _window =
@@ -230,7 +230,7 @@ static OSStatus audioCallback(void *inRefCon,
     pass2.depthAttachment.texture = _depthTexture;
     pass2.depthAttachment.loadAction = MTLLoadActionLoad;
     id encoder2 = [buffer renderCommandEncoderWithDescriptor:pass2];
-    [encoder2 setRenderPipelineState:_quadState];
+    [encoder2 setRenderPipelineState:_postShader];
     [encoder2 setFragmentTexture:_albedoTexture atIndex:0];
     [encoder2 drawPrimitives:4 vertexStart:0 vertexCount:4];
     [encoder2 endEncoding];
@@ -239,7 +239,7 @@ static OSStatus audioCallback(void *inRefCon,
   }
 }
 
-- (id<MTLRenderPipelineState>)createState:(NSString *)shader
+- (id<MTLRenderPipelineState>)createShader:(NSString *)shader
 {
   id library = [_device newLibraryWithSource:shader options:nil error:NULL];
   MTLRenderPipelineDescriptor *desc = [MTLRenderPipelineDescriptor new];
