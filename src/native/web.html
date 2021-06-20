@@ -12,6 +12,28 @@
     <canvas id="app"></canvas>
     <script>
       (async function() {
+        let backbuffer, depthbuffer, gbuffer;
+
+        const createBuffer = () => {
+          const { width: w, height: h } = canvas.getBoundingClientRect();
+
+          // Initialize Textures
+          backbuffer = gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D, backbuffer);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+          depthbuffer = gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D, depthbuffer);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, w, h, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
+
+          gbuffer = gl.createFramebuffer();
+          gl.bindFramebuffer(gl.FRAMEBUFFER, gbuffer);
+          gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, backbuffer, 0);
+          gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthbuffer, 0);
+        }
+
         // Prevent sleeping
         if (navigator.wakeLock) await navigator.wakeLock.request("screen");
 
@@ -28,18 +50,11 @@
         // Initialize WebGL
         const canvas = document.getElementById("app");
         const gl = canvas.getContext("webgl");
-        gl.getExtension("WEBGL_depth_texture")
+        gl.getExtension("WEBGL_depth_texture");
 
-        // Initialize Backbuffer Textures
-        const backbuffer = gl.createTexture();
-        const depthbuffer = gl.createTexture();
-        resizeBuffers();
-
-        // Initialize G-Buffer
-        const gbuffer = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, gbuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, backbuffer, 0);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthbuffer, 0);
+        // Create G-Buffer
+        createBuffer();
+        window.addEventListener("resize", () => createBuffer());
 
         // Initialize Timer
         let timerCurrent = performance.now(), lag = 0;
@@ -69,20 +84,7 @@
           }
         });
 
-        // Initialize
-        window.addEventListener("resize", resizeBuffers);
-
-        function resizeBuffers() {
-          const { width: w, height: h } = canvas.getBoundingClientRect();
-
-          gl.bindTexture(gl.TEXTURE_2D, backbuffer);
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-          gl.bindTexture(gl.TEXTURE_2D, depthbuffer);
-          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, w, h, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
-        }
-
+        // Render Loop
         requestAnimationFrame(function render() {
           // Update Timer
           const timerNext = performance.now();
