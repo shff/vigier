@@ -80,6 +80,7 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) CAMetalLayer *layer;
 @property(nonatomic, assign) id<MTLTexture> depthTexture, albedoTexture;
 @property(nonatomic, assign) id<MTLRenderPipelineState> trisShader, postShader;
+@property(nonatomic, assign) MTLRenderPassDescriptor *trisPass, *postPass;
 @property(nonatomic, assign) double timerCurrent, lag;
 @property(nonatomic, assign) int mouseMode;
 @property(nonatomic, assign) float clickX, clickY, deltaX, deltaY;
@@ -134,6 +135,22 @@ static OSStatus audioCallback(void *inRefCon,
   // Final State
   _postShader = [self createShader:shader];
   _trisShader = [self createShader:trisShader];
+
+  // Geometry Pass
+  _trisPass = [[MTLRenderPassDescriptor alloc] init];
+  _trisPass.colorAttachments[0].loadAction = MTLLoadActionClear;
+  _trisPass.colorAttachments[0].storeAction = MTLStoreActionStore;
+  _trisPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 0, 0, 1);
+  _trisPass.depthAttachment.clearDepth = 1.0;
+  _trisPass.depthAttachment.loadAction = MTLLoadActionClear;
+  _trisPass.depthAttachment.storeAction = MTLStoreActionStore;
+
+  // Post-processing Pass
+  _postPass = [[MTLRenderPassDescriptor alloc] init];
+  _postPass.colorAttachments[0].loadAction = MTLLoadActionLoad;
+  _postPass.colorAttachments[0].storeAction = MTLStoreActionStore;
+  _postPass.depthAttachment.loadAction = MTLLoadActionLoad;
+
 
   // Create Window
   _mainWindow = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
@@ -201,26 +218,15 @@ static OSStatus audioCallback(void *inRefCon,
     id buffer = [_queue commandBuffer];
 
     // Geometry Pass
-    MTLRenderPassDescriptor *trisPass = [[MTLRenderPassDescriptor alloc] init];
-    trisPass.colorAttachments[0].loadAction = MTLLoadActionClear;
-    trisPass.colorAttachments[0].storeAction = MTLStoreActionStore;
-    trisPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 0, 0, 1);
-    trisPass.colorAttachments[0].texture = _albedoTexture;
-    trisPass.depthAttachment.clearDepth = 1.0;
-    trisPass.depthAttachment.loadAction = MTLLoadActionClear;
-    trisPass.depthAttachment.storeAction = MTLStoreActionStore;
-    trisPass.depthAttachment.texture = _depthTexture;
-    id encoder1 = [buffer renderCommandEncoderWithDescriptor:trisPass];
+    _trisPass.colorAttachments[0].texture = _albedoTexture;
+    _trisPass.depthAttachment.texture = _depthTexture;
+    id encoder1 = [buffer renderCommandEncoderWithDescriptor:_trisPass];
     [encoder1 endEncoding];
 
     // Post-processing Pass
-    MTLRenderPassDescriptor *postPass = [[MTLRenderPassDescriptor alloc] init];
-    postPass.colorAttachments[0].loadAction = MTLLoadActionLoad;
-    postPass.colorAttachments[0].storeAction = MTLStoreActionStore;
-    postPass.colorAttachments[0].texture = drawable.texture;
-    postPass.depthAttachment.loadAction = MTLLoadActionLoad;
-    postPass.depthAttachment.texture = _depthTexture;
-    id encoder2 = [buffer renderCommandEncoderWithDescriptor:postPass];
+    _postPass.colorAttachments[0].texture = drawable.texture;
+    _postPass.depthAttachment.texture = _depthTexture;
+    id encoder2 = [buffer renderCommandEncoderWithDescriptor:_postPass];
     [encoder2 setRenderPipelineState:_postShader];
     [encoder2 setFragmentTexture:_albedoTexture atIndex:0];
     [encoder2 drawPrimitives:4 vertexStart:0 vertexCount:4];
