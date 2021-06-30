@@ -134,23 +134,9 @@ static OSStatus audioCallback(void *inRefCon,
 
   // Final State
   _postShader = [self createShader:shader];
+  _postPass = [self createPass:1 with:MTLLoadActionLoad];
   _trisShader = [self createShader:trisShader];
-
-  // Geometry Pass
-  _trisPass = [[MTLRenderPassDescriptor alloc] init];
-  _trisPass.colorAttachments[0].loadAction = MTLLoadActionClear;
-  _trisPass.colorAttachments[0].storeAction = MTLStoreActionStore;
-  _trisPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 0, 0, 1);
-  _trisPass.depthAttachment.clearDepth = 1.0;
-  _trisPass.depthAttachment.loadAction = MTLLoadActionClear;
-  _trisPass.depthAttachment.storeAction = MTLStoreActionStore;
-
-  // Post-processing Pass
-  _postPass = [[MTLRenderPassDescriptor alloc] init];
-  _postPass.colorAttachments[0].loadAction = MTLLoadActionLoad;
-  _postPass.colorAttachments[0].storeAction = MTLStoreActionStore;
-  _postPass.depthAttachment.loadAction = MTLLoadActionLoad;
-
+  _trisPass = [self createPass:1 with:MTLLoadActionClear];
 
   // Create Window
   _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
@@ -278,6 +264,22 @@ static OSStatus audioCallback(void *inRefCon,
   desc.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
   desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
   return [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
+}
+
+- (MTLRenderPassDescriptor *)createPass:(int)textures
+                                   with:(MTLLoadAction)loadAction
+{
+  MTLRenderPassDescriptor *pass = [[MTLRenderPassDescriptor alloc] init];
+  for (int i = 0; i < textures; i++)
+  {
+    pass.colorAttachments[i].loadAction = loadAction;
+    pass.colorAttachments[i].storeAction = MTLStoreActionStore;
+    pass.colorAttachments[i].clearColor = MTLClearColorMake(1, 0, 0, 1);
+  }
+  pass.depthAttachment.clearDepth = 1.0;
+  pass.depthAttachment.loadAction = loadAction;
+  pass.depthAttachment.storeAction = MTLStoreActionStore;
+  return pass;
 }
 
 - (id<MTLTexture>)createTexture:(MTLPixelFormat)format w:(int)w h:(int)h
