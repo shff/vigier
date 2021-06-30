@@ -4,7 +4,7 @@
 @import QuartzCore;
 @import AudioToolbox;
 
-NSString *shader =
+NSString *postShader =
     @"#include <metal_stdlib>\n"
      "using namespace metal;"
      "vertex float4 v_main(uint idx [[vertex_id]])"
@@ -21,7 +21,7 @@ NSString *shader =
      "    return half4(albedo.sample(Sampler, in.xy).xyz, 1);"
      "}";
 
-NSString *trisShader =
+NSString *quadShader =
     @"#include <metal_stdlib>\n"
      "using namespace metal;"
      "vertex float4 v_main("
@@ -79,8 +79,8 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLCommandQueue> queue;
 @property(nonatomic, assign) CAMetalLayer *layer;
 @property(nonatomic, assign) id<MTLTexture> depthTexture, albedoTexture;
-@property(nonatomic, assign) id<MTLRenderPipelineState> trisShader, postShader;
-@property(nonatomic, assign) MTLRenderPassDescriptor *trisPass, *postPass;
+@property(nonatomic, assign) id<MTLRenderPipelineState> quadShader, postShader;
+@property(nonatomic, assign) MTLRenderPassDescriptor *quadPass, *postPass;
 @property(nonatomic, assign) double timerCurrent, lag;
 @property(nonatomic, assign) float clickX, clickY, deltaX, deltaY;
 @property(nonatomic, assign) int mouseMode, cursorVisible;
@@ -132,10 +132,10 @@ static OSStatus audioCallback(void *inRefCon,
     [_layer setDevice:_device];
 
     // Create Passes and Shaders
-    _postShader = [self createShader:shader];
+    _postShader = [self createShader:postShader];
     _postPass = [self createPass:1 with:MTLLoadActionLoad];
-    _trisShader = [self createShader:trisShader];
-    _trisPass = [self createPass:1 with:MTLLoadActionClear];
+    _quadShader = [self createShader:quadShader];
+    _quadPass = [self createPass:1 with:MTLLoadActionClear];
 
     // Create the Window
     _window =
@@ -214,9 +214,9 @@ static OSStatus audioCallback(void *inRefCon,
     id buffer = [_queue commandBuffer];
 
     // Geometry Pass
-    _trisPass.colorAttachments[0].texture = _albedoTexture;
-    _trisPass.depthAttachment.texture = _depthTexture;
-    id encoder1 = [buffer renderCommandEncoderWithDescriptor:_trisPass];
+    _quadPass.colorAttachments[0].texture = _albedoTexture;
+    _quadPass.depthAttachment.texture = _depthTexture;
+    id encoder1 = [buffer renderCommandEncoderWithDescriptor:_quadPass];
     [encoder1 endEncoding];
 
     // Post-Processing Pass
