@@ -74,7 +74,7 @@ static OSStatus audioCallback(void *inRefCon,
 }
 
 @interface App : UIResponder <UIApplicationDelegate>
-@property(nonatomic, assign) UIWindow *mainWindow;
+@property(nonatomic, strong) UIWindow *window;
 @property(nonatomic, assign) id<MTLDevice> device;
 @property(nonatomic, assign) id<MTLCommandQueue> queue;
 @property(nonatomic, assign) CAMetalLayer *layer;
@@ -153,10 +153,10 @@ static OSStatus audioCallback(void *inRefCon,
 
 
   // Create Window
-  _mainWindow = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-  [_mainWindow setRootViewController:[[UIViewController alloc] init]];
-  [[_mainWindow.rootViewController.view layer] addSublayer:_layer];
-  [_mainWindow makeKeyAndVisible];
+  _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+  [_window setRootViewController:[[UIViewController alloc] init]];
+  [[_window.rootViewController.view layer] addSublayer:_layer];
+  [_window makeKeyAndVisible];
 
   // Initialize timer
   _timerCurrent = CACurrentMediaTime();
@@ -170,11 +170,11 @@ static OSStatus audioCallback(void *inRefCon,
   _deltaY = 0.0f;
 
   // Add gesture recognizers
-  [_mainWindow.rootViewController.view
+  [_window.rootViewController.view
       addGestureRecognizer:[[UITapGestureRecognizer alloc]
                                initWithTarget:self
                                        action:@selector(onTap:)]];
-  [_mainWindow.rootViewController.view
+  [_window.rootViewController.view
       addGestureRecognizer:[[UIPanGestureRecognizer alloc]
                                initWithTarget:self
                                        action:@selector(onDrag:)]];
@@ -258,7 +258,7 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)createBuffers
 {
-  CGRect bounds = [_mainWindow frame];
+  CGRect bounds = [_window frame];
   _layer.frame = bounds;
 
   _depthTexture = [self createTexture:MTLPixelFormatDepth32Float_Stencil8
