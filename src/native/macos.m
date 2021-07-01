@@ -166,6 +166,12 @@ static OSStatus audioCallback(void *inRefCon,
     _deltaX = 0.0f;
     _deltaY = 0.0f;
 
+    float vertices[] = {0.0, 0.8, 0.0, -0.8, -0.8, 0.0, 0.8, -0.8, 0.0};
+    _geometry[@"tri"] =
+        [_device newBufferWithBytes:vertices
+                             length:(9 * sizeof(float))
+                            options:MTLResourceStorageModeShared];
+
     // Initialize loop
     [NSTimer scheduledTimerWithTimeInterval:1.0 / 60.0
                                      target:self
