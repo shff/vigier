@@ -81,6 +81,7 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLTexture> depthTexture, albedoTexture;
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadShader, postShader;
 @property(nonatomic, assign) MTLRenderPassDescriptor *quadPass, *postPass;
+@property(nonatomic, assign) NSMutableDictionary *buffers;
 @property(nonatomic, assign) double timerCurrent, lag;
 @property(nonatomic, assign) int mouseMode;
 @property(nonatomic, assign) float clickX, clickY, deltaX, deltaY;
@@ -137,6 +138,7 @@ static OSStatus audioCallback(void *inRefCon,
   _postPass = [self createPass:1 with:MTLLoadActionLoad];
   _quadShader = [self createShader:quadShader];
   _quadPass = [self createPass:1 with:MTLLoadActionClear];
+  _buffers = [[NSMutableDictionary alloc] init];
 
   // Create Window
   _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
@@ -208,6 +210,11 @@ static OSStatus audioCallback(void *inRefCon,
     _quadPass.depthAttachment.texture = _depthTexture;
     id encoder1 = [buffer renderCommandEncoderWithDescriptor:_quadPass];
     [encoder1 setRenderPipelineState:_quadShader];
+    for (id buffer in _buffers)
+    {
+      [encoder1 setVertexBuffer:_buffers[buffer] offset:0 atIndex:0];
+      [encoder1 drawPrimitives:3 vertexStart:0 vertexCount:3];
+    }
     [encoder1 endEncoding];
 
     // Post-processing Pass
