@@ -207,6 +207,7 @@ static OSStatus audioCallback(void *inRefCon,
     _quadPass.colorAttachments[0].texture = _albedoTexture;
     _quadPass.depthAttachment.texture = _depthTexture;
     id encoder1 = [buffer renderCommandEncoderWithDescriptor:_quadPass];
+    [encoder1 setRenderPipelineState:_quadShader];
     [encoder1 endEncoding];
 
     // Post-processing Pass
