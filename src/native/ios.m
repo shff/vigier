@@ -210,9 +210,9 @@ static OSStatus audioCallback(void *inRefCon,
     _quadPass.depthAttachment.texture = _depthTexture;
     id encoder1 = [buffer renderCommandEncoderWithDescriptor:_quadPass];
     [encoder1 setRenderPipelineState:_quadShader];
-    for (id buffer in _buffers)
+    for (id buffer in _buffers.objectEnumerator)
     {
-      [encoder1 setVertexBuffer:_buffers[buffer] offset:0 atIndex:0];
+      [encoder1 setVertexBuffer:buffer offset:0 atIndex:0];
       [encoder1 drawPrimitives:3 vertexStart:0 vertexCount:3];
     }
     [encoder1 endEncoding];
