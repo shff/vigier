@@ -7,6 +7,7 @@ fn main() {
             .flag("-Wall")
             .flag("-Werror")
             .flag("-pedantic")
+            .flag("-Wno-unused-parameter")
             .flag("-mmacosx-version-min=10.10")
             .file("src/native/macos.m")
             .compile("native.a");

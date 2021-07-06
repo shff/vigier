@@ -49,10 +49,6 @@ static OSStatus audioCallback(void *inRefCon,
                               UInt32 inBusNumber, UInt32 inNumberFrames,
                               AudioBufferList *ioData)
 {
-  (void)ioActionFlags;
-  (void)inTimeStamp;
-  (void)inBusNumber;
-
   voice *voices = (voice *)inRefCon;
   SInt16 *left = (SInt16 *)ioData->mBuffers[0].mData;
   SInt16 *right = (SInt16 *)ioData->mBuffers[1].mData;
@@ -81,7 +77,7 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLTexture> depthTexture, albedoTexture;
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadShader, postShader;
 @property(nonatomic, assign) MTLRenderPassDescriptor *quadPass, *postPass;
-@property(nonatomic, assign) NSMutableDictionary *buffers;
+@property(nonatomic, assign) NSMutableDictionary *geometry;
 @property(nonatomic, assign) double timerCurrent, lag;
 @property(nonatomic, assign) float clickX, clickY, deltaX, deltaY;
 @property(nonatomic, assign) int mouseMode, cursorVisible;
@@ -97,6 +93,8 @@ static OSStatus audioCallback(void *inRefCon,
     _voices = malloc(sizeof(voice) * 32);
     memset(_voices, 0, sizeof(voice) * 32);
 
+    // Initialize Audio
+    AudioUnit audioUnit;
     AudioComponentDescription compDesc = {
         .componentType = kAudioUnitType_Output,
         .componentSubType = kAudioUnitSubType_DefaultOutput,
@@ -112,9 +110,6 @@ static OSStatus audioCallback(void *inRefCon,
         .mFramesPerPacket = 1,
         .mBytesPerFrame = 2,
         .mBytesPerPacket = 2};
-
-    // Initialize Audio
-    AudioUnit audioUnit;
     AudioComponentInstanceNew(AudioComponentFindNext(0, &compDesc), &audioUnit);
     AudioUnitSetProperty(audioUnit, kAudioUnitProperty_StreamFormat,
                          kAudioUnitScope_Input, 0, &audioFormat,
@@ -125,19 +120,6 @@ static OSStatus audioCallback(void *inRefCon,
                          sizeof(AURenderCallbackStruct));
     AudioUnitInitialize(audioUnit);
     AudioOutputUnitStart(audioUnit);
-
-    // Create the Metal device
-    _device = [MTLCreateSystemDefaultDevice() autorelease];
-    _queue = [_device newCommandQueue];
-    _layer = [CAMetalLayer layer];
-    [_layer setDevice:_device];
-
-    // Create Passes and Shaders
-    _postShader = [self createShader:postShader];
-    _postPass = [self createPass:1 with:MTLLoadActionLoad];
-    _quadShader = [self createShader:quadShader];
-    _quadPass = [self createPass:1 with:MTLLoadActionClear];
-    _buffers = [[NSMutableDictionary alloc] init];
 
     // Create the Window
     _window =
@@ -151,23 +133,29 @@ static OSStatus audioCallback(void *inRefCon,
     [_window cascadeTopLeftFromPoint:NSMakePoint(20, 20)];
     [_window setMinSize:NSMakeSize(300, 200)];
     [_window setAcceptsMouseMovedEvents:YES];
-    [_window.contentView setLayer:_layer];
     [_window makeKeyAndOrderFront:nil];
     [_window setNextResponder:self];
     [_window setDelegate:self];
     [_window center];
 
-    // Re-create buffers when resizing windows
-    [self createBuffers];
-    [[NSNotificationCenter defaultCenter]
-        addObserver:self
-           selector:@selector(createBuffers)
-               name:NSWindowDidResizeNotification
-             object:nil];
-
     // Disable tabbing
     if ([_window respondsToSelector:@selector(setTabbingMode:)])
       [_window setTabbingMode:NSWindowTabbingModeDisallowed];
+
+    // Create the Metal device
+    _device = [MTLCreateSystemDefaultDevice() autorelease];
+    _queue = [_device newCommandQueue];
+    _layer = [CAMetalLayer layer];
+    [_layer setDevice:_device];
+    [_window.contentView setLayer:_layer];
+
+    // Create Passes, Shaders and Buffers
+    _postShader = [self createShader:postShader];
+    _postPass = [self createPass:1 with:MTLLoadActionLoad];
+    _quadShader = [self createShader:quadShader];
+    _quadPass = [self createPass:1 with:MTLLoadActionClear];
+    [self createBuffers];
+    _geometry = [[NSMutableDictionary alloc] init];
 
     // Initialize timer
     _timerCurrent = CACurrentMediaTime();
@@ -220,7 +208,7 @@ static OSStatus audioCallback(void *inRefCon,
     _quadPass.depthAttachment.texture = _depthTexture;
     id encoder1 = [buffer renderCommandEncoderWithDescriptor:_quadPass];
     [encoder1 setRenderPipelineState:_quadShader];
-    for (id buffer in _buffers.objectEnumerator)
+    for (id buffer in _geometry.objectEnumerator)
     {
       [encoder1 setVertexBuffer:buffer offset:0 atIndex:0];
       [encoder1 drawPrimitives:3 vertexStart:0 vertexCount:3];
@@ -253,18 +241,17 @@ static OSStatus audioCallback(void *inRefCon,
   return [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
 }
 
-- (MTLRenderPassDescriptor *)createPass:(int)textures
-                                   with:(MTLLoadAction)loadAction
+- (MTLRenderPassDescriptor *)createPass:(int)textures with:(MTLLoadAction)action
 {
   MTLRenderPassDescriptor *pass = [[MTLRenderPassDescriptor alloc] init];
   for (int i = 0; i < textures; i++)
   {
-    pass.colorAttachments[i].loadAction = loadAction;
+    pass.colorAttachments[i].loadAction = action;
     pass.colorAttachments[i].storeAction = MTLStoreActionStore;
     pass.colorAttachments[i].clearColor = MTLClearColorMake(1, 0, 0, 1);
   }
   pass.depthAttachment.clearDepth = 1.0;
-  pass.depthAttachment.loadAction = loadAction;
+  pass.depthAttachment.loadAction = action;
   pass.depthAttachment.storeAction = MTLStoreActionStore;
   return pass;
 }
@@ -293,6 +280,11 @@ static OSStatus audioCallback(void *inRefCon,
   return [_device newTextureWithDescriptor:desc];
 }
 
+- (void)windowDidResize:(NSNotification *)notification
+{
+  [self createBuffers];
+}
+
 - (void)mouseMoved:(NSEvent *)event
 {
   if (![_window.contentView hitTest:[event locationInWindow]])
@@ -317,9 +309,8 @@ static OSStatus audioCallback(void *inRefCon,
 
 - (void)mouseDragged:(NSEvent *)event
 {
-  if (![_window.contentView hitTest:[event locationInWindow]] ||
-      _mouseMode != 2)
-    return;
+  if (![_window.contentView hitTest:[event locationInWindow]]) return;
+  if (_mouseMode != 2) return;
 
   [self toggleMouse:false];
   _deltaX += [event deltaX];
