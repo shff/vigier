@@ -260,16 +260,15 @@ static OSStatus audioCallback(void *inRefCon,
 {
   CGSize size = [_window.contentView frame].size;
   [_layer setDrawableSize:size];
+  int w = size.width, h = size.height, textures = 1;
 
-  _depthTexture = [self createTexture:MTLPixelFormatDepth32Float_Stencil8
-                                    w:size.width
-                                    h:size.height];
-  _albedoTexture = [self createTexture:MTLPixelFormatRGBA8Unorm_sRGB
-                                     w:size.width
-                                     h:size.height];
+  _depthTexture = [self newTexture:MTLPixelFormatDepth32Float_Stencil8 w:w h:h];
+  for (int i = 0; i < textures; i++)
+    _textures[i] = [self newTexture:MTLPixelFormatRGBA8Unorm_sRGB w:w h:h];
+
 }
 
-- (id<MTLTexture>)createTexture:(MTLPixelFormat)format w:(int)w h:(int)h
+- (id<MTLTexture>)newTexture:(MTLPixelFormat)format w:(int)w h:(int)h
 {
   MTLTextureDescriptor *desc = [[MTLTextureDescriptor alloc] init];
   desc.storageMode = MTLStorageModePrivate;
