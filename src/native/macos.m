@@ -74,7 +74,8 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLDevice> device;
 @property(nonatomic, assign) id<MTLCommandQueue> queue;
 @property(nonatomic, assign) CAMetalLayer *layer;
-@property(nonatomic, assign) id<MTLTexture> depthTexture, albedoTexture;
+@property(nonatomic, assign) NSMutableArray *buffers;
+@property(nonatomic, assign) id<MTLTexture> depthTexture;
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadShader, postShader;
 @property(nonatomic, assign) MTLRenderPassDescriptor *quadPass, *postPass;
 @property(nonatomic, assign) NSMutableDictionary *geometry;
@@ -150,12 +151,9 @@ static OSStatus audioCallback(void *inRefCon,
     [_window.contentView setLayer:_layer];
 
     // Create Passes, Shaders and Buffers
-    _postShader = [self createShader:postShader];
-    _postPass = [self createPass:1 with:MTLLoadActionLoad];
-    _quadShader = [self createShader:quadShader];
-    _quadPass = [self createPass:1 with:MTLLoadActionClear];
-    [self createBuffers];
     _geometry = [[NSMutableDictionary alloc] init];
+    _buffers = [[NSMutableArray alloc] init];
+    [self createBuffers];
 
     // Initialize timer
     _timerCurrent = CACurrentMediaTime();
@@ -204,8 +202,6 @@ static OSStatus audioCallback(void *inRefCon,
     id buffer = [_queue commandBuffer];
 
     // Geometry Pass
-    _quadPass.colorAttachments[0].texture = _albedoTexture;
-    _quadPass.depthAttachment.texture = _depthTexture;
     id encoder1 = [buffer renderCommandEncoderWithDescriptor:_quadPass];
     [encoder1 setRenderPipelineState:_quadShader];
     for (id buffer in _geometry.objectEnumerator)
@@ -217,10 +213,10 @@ static OSStatus audioCallback(void *inRefCon,
 
     // Post-Processing Pass
     _postPass.colorAttachments[0].texture = drawable.texture;
-    _postPass.depthAttachment.texture = _depthTexture;
     id encoder2 = [buffer renderCommandEncoderWithDescriptor:_postPass];
     [encoder2 setRenderPipelineState:_postShader];
-    [encoder2 setFragmentTexture:_albedoTexture atIndex:0];
+    for (int i = 0; i < 1; i++)
+      [encoder2 setFragmentTexture:_buffers[i] atIndex:i];
     [encoder2 drawPrimitives:4 vertexStart:0 vertexCount:4];
     [encoder2 endEncoding];
 
@@ -246,10 +242,12 @@ static OSStatus audioCallback(void *inRefCon,
   MTLRenderPassDescriptor *pass = [[MTLRenderPassDescriptor alloc] init];
   for (int i = 0; i < textures; i++)
   {
+    pass.colorAttachments[i].texture = _buffers[i];
     pass.colorAttachments[i].loadAction = action;
     pass.colorAttachments[i].storeAction = MTLStoreActionStore;
     pass.colorAttachments[i].clearColor = MTLClearColorMake(1, 0, 0, 1);
   }
+  pass.depthAttachment.texture = _depthTexture;
   pass.depthAttachment.clearDepth = 1.0;
   pass.depthAttachment.loadAction = action;
   pass.depthAttachment.storeAction = MTLStoreActionStore;
@@ -264,8 +262,12 @@ static OSStatus audioCallback(void *inRefCon,
 
   _depthTexture = [self newTexture:MTLPixelFormatDepth32Float_Stencil8 w:w h:h];
   for (int i = 0; i < textures; i++)
-    _textures[i] = [self newTexture:MTLPixelFormatRGBA8Unorm_sRGB w:w h:h];
+    _buffers[i] = [self newTexture:MTLPixelFormatRGBA8Unorm_sRGB w:w h:h];
 
+  _postShader = [self createShader:postShader];
+  _postPass = [self createPass:textures with:MTLLoadActionLoad];
+  _quadShader = [self createShader:quadShader];
+  _quadPass = [self createPass:textures with:MTLLoadActionClear];
 }
 
 - (id<MTLTexture>)newTexture:(MTLPixelFormat)format w:(int)w h:(int)h
