@@ -150,12 +150,12 @@ static OSStatus audioCallback(void *inRefCon,
     [_window.contentView setLayer:_layer];
 
     // Create Passes, Shaders and Buffers
+    _geometry = [[NSMutableDictionary alloc] init];
     _postShader = [self createShader:postShader];
     _postPass = [self createPass:1 with:MTLLoadActionLoad];
     _quadShader = [self createShader:quadShader];
     _quadPass = [self createPass:1 with:MTLLoadActionClear];
     [self createBuffers];
-    _geometry = [[NSMutableDictionary alloc] init];
 
     // Initialize timer
     _timerCurrent = CACurrentMediaTime();
@@ -230,6 +230,16 @@ static OSStatus audioCallback(void *inRefCon,
   }
 }
 
+- (void)createBuffers
+{
+  CGSize size = [_window.contentView frame].size;
+  [_layer setDrawableSize:size];
+  int w = size.width, h = size.height;
+
+  _albedoTexture = [self newTexture:MTLPixelFormatRGBA8Unorm_sRGB w:w h:h];
+  _depthTexture = [self newTexture:MTLPixelFormatDepth32Float_Stencil8 w:w h:h];
+}
+
 - (id<MTLRenderPipelineState>)createShader:(NSString *)shader
 {
   id library = [_device newLibraryWithSource:shader options:nil error:NULL];
@@ -256,20 +266,7 @@ static OSStatus audioCallback(void *inRefCon,
   return pass;
 }
 
-- (void)createBuffers
-{
-  CGSize size = [_window.contentView frame].size;
-  [_layer setDrawableSize:size];
-
-  _depthTexture = [self createTexture:MTLPixelFormatDepth32Float_Stencil8
-                                    w:size.width
-                                    h:size.height];
-  _albedoTexture = [self createTexture:MTLPixelFormatRGBA8Unorm_sRGB
-                                     w:size.width
-                                     h:size.height];
-}
-
-- (id<MTLTexture>)createTexture:(MTLPixelFormat)format w:(int)w h:(int)h
+- (id<MTLTexture>)newTexture:(MTLPixelFormat)format w:(int)w h:(int)h
 {
   MTLTextureDescriptor *desc = [[MTLTextureDescriptor alloc] init];
   desc.storageMode = MTLStorageModePrivate;

@@ -81,7 +81,7 @@ static OSStatus audioCallback(void *inRefCon,
 @property(nonatomic, assign) id<MTLTexture> depthTexture, albedoTexture;
 @property(nonatomic, assign) id<MTLRenderPipelineState> quadShader, postShader;
 @property(nonatomic, assign) MTLRenderPassDescriptor *quadPass, *postPass;
-@property(nonatomic, assign) NSMutableDictionary *buffers;
+@property(nonatomic, assign) NSMutableDictionary *geometry;
 @property(nonatomic, assign) double timerCurrent, lag;
 @property(nonatomic, assign) int mouseMode;
 @property(nonatomic, assign) float clickX, clickY, deltaX, deltaY;
@@ -127,24 +127,25 @@ static OSStatus audioCallback(void *inRefCon,
   AudioUnitInitialize(audioUnit);
   AudioOutputUnitStart(audioUnit);
 
+  // Create Window
+  _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+  [_window setRootViewController:[[UIViewController alloc] init]];
+  [_window makeKeyAndVisible];
+
   // Initialize Metal
   _device = [MTLCreateSystemDefaultDevice() autorelease];
   _queue = [_device newCommandQueue];
   _layer = [[CAMetalLayer alloc] init];
   _layer.device = _device;
+  [[_window.rootViewController.view layer] addSublayer:_layer];
 
   // Final State
+  _geometry = [[NSMutableDictionary alloc] init];
   _postShader = [self createShader:postShader];
   _postPass = [self createPass:1 with:MTLLoadActionLoad];
   _quadShader = [self createShader:quadShader];
   _quadPass = [self createPass:1 with:MTLLoadActionClear];
-  _buffers = [[NSMutableDictionary alloc] init];
-
-  // Create Window
-  _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-  [_window setRootViewController:[[UIViewController alloc] init]];
-  [[_window.rootViewController.view layer] addSublayer:_layer];
-  [_window makeKeyAndVisible];
+  [self createBuffers];
 
   // Initialize timer
   _timerCurrent = CACurrentMediaTime();
@@ -168,7 +169,6 @@ static OSStatus audioCallback(void *inRefCon,
                                        action:@selector(onDrag:)]];
 
   // Re-create buffers when rotating the device
-  [self createBuffers];
   [[NSNotificationCenter defaultCenter]
       addObserver:self
          selector:@selector(createBuffers)
@@ -210,7 +210,7 @@ static OSStatus audioCallback(void *inRefCon,
     _quadPass.depthAttachment.texture = _depthTexture;
     id encoder1 = [buffer renderCommandEncoderWithDescriptor:_quadPass];
     [encoder1 setRenderPipelineState:_quadShader];
-    for (id buffer in _buffers.objectEnumerator)
+    for (id buffer in _geometry.objectEnumerator)
     {
       [encoder1 setVertexBuffer:buffer offset:0 atIndex:0];
       [encoder1 drawPrimitives:3 vertexStart:0 vertexCount:3];
@@ -254,13 +254,10 @@ static OSStatus audioCallback(void *inRefCon,
 {
   CGRect bounds = [_window frame];
   _layer.frame = bounds;
+  int w = bounds.size.width, h = bounds.size.height;
 
-  _depthTexture = [self createTexture:MTLPixelFormatDepth32Float_Stencil8
-                                    w:bounds.size.width
-                                    h:bounds.size.height];
-  _albedoTexture = [self createTexture:MTLPixelFormatRGBA8Unorm_sRGB
-                                     w:bounds.size.width
-                                     h:bounds.size.height];
+  _albedoTexture = [self newTexture:MTLPixelFormatRGBA8Unorm_sRGB w:w h:h];
+  _depthTexture = [self newTexture:MTLPixelFormatDepth32Float_Stencil8 w:w h:h];
 }
 
 - (id<MTLRenderPipelineState>)createShader:(NSString *)shader
@@ -274,23 +271,22 @@ static OSStatus audioCallback(void *inRefCon,
   return [_device newRenderPipelineStateWithDescriptor:desc error:NULL];
 }
 
-- (MTLRenderPassDescriptor *)createPass:(int)textures
-                                   with:(MTLLoadAction)loadAction
+- (MTLRenderPassDescriptor *)createPass:(int)textures with:(MTLLoadAction)action
 {
   MTLRenderPassDescriptor *pass = [[MTLRenderPassDescriptor alloc] init];
   for (int i = 0; i < textures; i++)
   {
-    pass.colorAttachments[i].loadAction = loadAction;
+    pass.colorAttachments[i].loadAction = action;
     pass.colorAttachments[i].storeAction = MTLStoreActionStore;
     pass.colorAttachments[i].clearColor = MTLClearColorMake(1, 0, 0, 1);
   }
   pass.depthAttachment.clearDepth = 1.0;
-  pass.depthAttachment.loadAction = loadAction;
+  pass.depthAttachment.loadAction = action;
   pass.depthAttachment.storeAction = MTLStoreActionStore;
   return pass;
 }
 
-- (id<MTLTexture>)createTexture:(MTLPixelFormat)format w:(int)w h:(int)h
+- (id<MTLTexture>)newTexture:(MTLPixelFormat)format w:(int)w h:(int)h
 {
   MTLTextureDescriptor *desc = [[MTLTextureDescriptor alloc] init];
   desc.storageMode = MTLStorageModePrivate;
