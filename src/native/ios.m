@@ -49,10 +49,6 @@ static OSStatus audioCallback(void *inRefCon,
                               UInt32 inBusNumber, UInt32 inNumberFrames,
                               AudioBufferList *ioData)
 {
-  (void)ioActionFlags;
-  (void)inTimeStamp;
-  (void)inBusNumber;
-
   voice *voices = (voice *)inRefCon;
   SInt16 *left = (SInt16 *)ioData->mBuffers[0].mData;
   SInt16 *right = (SInt16 *)ioData->mBuffers[1].mData;

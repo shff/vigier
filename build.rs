@@ -18,6 +18,7 @@ fn main() {
             .flag("-Wall")
             .flag("-Werror")
             .flag("-pedantic")
+            .flag("-Wno-unused-parameter")
             .flag("-mios-simulator-version-min=13.0")
             .file("src/native/ios.m")
             .compile("native.a");
@@ -28,6 +29,7 @@ fn main() {
             .flag("-Wall")
             .flag("-Werror")
             .flag("-pedantic")
+            .flag("-Wno-unused-parameter")
             .file("src/native/ios.m")
             .compile("native.a");
     } else if target.contains("windows") {
